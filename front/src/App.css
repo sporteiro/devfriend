@@ -1,0 +1,54 @@
+/* Layout general */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  margin: 0;       /* quitar márgenes */
+  padding: 0;      /* quitar padding */
+  background-color: #fff; /* fondo blanco */
+  color: #333;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.app-container.dark {
+  background-color: #121212;
+  color: #eee;
+}
+
+/* Contenido principal */
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Botón menú (solo móvil) */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background-color: #000; /* negro */
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 8px 12px;
+  z-index: 1000;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.menu-toggle:hover {
+  background-color: #555;
+}
+
+/* Responsividad: botón visible en móvil */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+}
+
