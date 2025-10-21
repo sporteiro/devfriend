@@ -3,9 +3,11 @@
     <h2 class="title">DevFriend</h2>
 
     <nav class="menu">
-      <a href="#">Inicio</a>
-      <a href="#">Perfil</a>
-      <a href="#">Configuración</a>
+      <a href="#">Notes</a>
+      <a href="#">Email</a>
+      <a href="#">Repository</a>
+      <a href="#">Messages</a>
+      <a href="#">Credentials</a>
     </nav>
 
     <div class="mode-toggle">

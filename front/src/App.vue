@@ -6,34 +6,42 @@
     <AppSidebar
       :sidebarOpen="sidebarOpen"
       :isDarkMode="isDarkMode"
-      @update:isDarkMode="isDarkMode = $event"
+      @update:isDarkMode="toggleDarkMode"
     />
 
     <!-- Contenido principal -->
     <main class="content">
-      <h1>Frontend con Vue y FastAPI</h1>
-      <button @click="fetchData">Obtener datos del Backend</button>
-
-      <div v-if="response">
-        <p><strong>Mensaje desde FastAPI:</strong> {{ response.message }}</p>
-      </div>
-      <div v-if="error" style="color: red;">
-        <p><strong>Error:</strong> {{ error }}</p>
-      </div>
+      <h1>DevFriend - Gestor de Notas</h1>
+      
+      <NoteForm @submit="createNote" />
+      
+      <NoteList 
+        :notes="notes" 
+        :loading="loading" 
+        :error="error" 
+      />
     </main>
   </div>
 </template>
 
 <script>
 import AppSidebar from "./components/AppSidebar.vue";
+import NoteForm from "./components/NoteForm.vue";
+import NoteList from "./components/NoteList.vue";
+import { noteService } from "./services/noteService.js";
 import "./App.css";
 
 export default {
   name: "App",
-  components: { AppSidebar },
+  components: { 
+    AppSidebar,
+    NoteForm,
+    NoteList,
+  },
   data() {
     return {
-      response: null,
+      notes: [],
+      loading: false,
       error: null,
       isDarkMode: false,
       sidebarOpen: false,
@@ -42,14 +50,29 @@ export default {
   mounted() {
     const saved = localStorage.getItem("darkMode");
     this.isDarkMode = saved === "true";
+    this.loadNotes();
   },
   methods: {
-    async fetchData() {
+    toggleDarkMode(value) {
+      this.isDarkMode = value;
+      localStorage.setItem("darkMode", value);
+    },
+    async loadNotes() {
+      this.loading = true;
       this.error = null;
       try {
-        const res = await fetch("http://localhost:8888/");
-        if (!res.ok) throw new Error("Error al obtener datos");
-        this.response = await res.json();
+        this.notes = await noteService.getAllNotes();
+      } catch (error) {
+        this.error = error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async createNote(content) {
+      this.error = null;
+      try {
+        await noteService.createNote(content);
+        await this.loadNotes();
       } catch (error) {
         this.error = error.message;
       }
