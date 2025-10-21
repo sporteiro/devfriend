@@ -2,7 +2,6 @@
   <aside :class="['sidebar', { open: sidebarOpen }]">
     <div class="sidebar-header">
       <img src="@/assets/logo.png" alt="DevFriend Logo" class="sidebar-logo" />
-      <h2 class="title">DevFriend</h2>
     </div>
 
     <nav class="menu">
