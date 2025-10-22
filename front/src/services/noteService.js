@@ -1,5 +1,9 @@
 // Adaptador para comunicación con el backend (puerto en arquitectura hexagonal)
-const API_URL = 'http://localhost:8888';
+// Detecta automáticamente si estamos en local o en producción
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = isLocalhost 
+  ? 'http://localhost:8888' 
+  : 'https://devfriend-back.onrender.com';
 
 export const noteService = {
   async getAllNotes() {

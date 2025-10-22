@@ -1,12 +1,26 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
+import os
+from dotenv import load_dotenv
 from src.models.note import Note
 from src.services.note_service import NoteService
-from src.repositories.sqlite_repository import SQLiteNoteRepository
+from src.repositories.postgresql_repository import PostgreSQLNoteRepository
 
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 router = APIRouter()
-note_service = NoteService(SQLiteNoteRepository())
+
+# Configuración de PostgreSQL desde variables de entorno
+db_config = {
+    'host': os.getenv('DB_HOST', 'postgres'),
+    'port': int(os.getenv('DB_PORT', '5432')),
+    'database': os.getenv('DB_NAME', 'devfriend'),
+    'user': os.getenv('DB_USER', 'devfriend'),
+    'password': os.getenv('DB_PASSWORD', 'devfriend')
+}
+
+note_service = NoteService(PostgreSQLNoteRepository(**db_config))
 
 @router.get("/notes", response_model=List[Note])
 async def get_notes():

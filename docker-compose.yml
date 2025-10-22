@@ -1,11 +1,39 @@
 services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: devfriend
+      POSTGRES_USER: devfriend
+      POSTGRES_PASSWORD: devfriend
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devfriend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   back:
     build:
       context: ./back
     ports:
       - "8888:8888"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: devfriend
+      DB_USER: devfriend
+      DB_PASSWORD: devfriend
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
+
   front:
     build: ./front
     ports:
@@ -14,8 +42,13 @@ services:
       - ./front:/app
     stdin_open: true
     tty: true
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
 
