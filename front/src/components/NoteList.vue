@@ -1,10 +1,10 @@
 <template>
   <div class="note-list">
-    <h2>Mis Notas</h2>
-    <div v-if="loading" class="loading">Cargando notas...</div>
+    <h2>Notes</h2>
+    <div v-if="loading" class="loading">Loading notes...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="notes.length === 0" class="empty">
-      No hay notas aún. ¡Crea tu primera nota!
+      No notes yet
     </div>
     <div v-else class="notes-grid">
       <div v-for="note in notes" :key="note.id" class="note-card">

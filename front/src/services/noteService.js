@@ -9,7 +9,7 @@ export const noteService = {
   async getAllNotes() {
     const response = await fetch(`${API_URL}/notes`);
     if (!response.ok) {
-      throw new Error('Error al obtener las notas');
+      throw new Error('Error getting notes');
     }
     return await response.json();
   },

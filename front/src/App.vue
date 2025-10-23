@@ -11,7 +11,7 @@
 
     <!-- Contenido principal -->
     <main class="content">
-      <h1>DevFriend - Gestor de Notas</h1>
+      <h1>Notes</h1>
       
       <NoteForm @submit="createNote" />
       
