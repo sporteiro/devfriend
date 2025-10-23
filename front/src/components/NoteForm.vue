@@ -2,11 +2,11 @@
   <div class="note-form">
     <textarea
       v-model="content"
-      placeholder="Escribe tu nota aquí..."
+      placeholder="Write here"
       rows="6"
     ></textarea>
     <button @click="handleSubmit" :disabled="!content.trim()">
-      Guardar Nota
+      Save
     </button>
     <p v-if="error" class="error">{{ error }}</p>
   </div>

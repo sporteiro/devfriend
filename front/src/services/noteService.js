@@ -26,7 +26,7 @@ export const noteService = {
       }),
     });
     if (!response.ok) {
-      throw new Error('Error al crear la nota');
+      throw new Error('Error creating note');
     }
     return await response.json();
   },
