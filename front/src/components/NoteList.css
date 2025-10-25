@@ -73,10 +73,106 @@
   color: #eee;
 }
 
+/* Estilos para Markdown */
+.note-content h1,
+.note-content h2,
+.note-content h3,
+.note-content h4,
+.note-content h5,
+.note-content h6 {
+  margin: 10px 0 5px 0;
+  font-weight: bold;
+  color: #333;
+}
+
+.dark .note-content h1,
+.dark .note-content h2,
+.dark .note-content h3,
+.dark .note-content h4,
+.dark .note-content h5,
+.dark .note-content h6 {
+  color: #eee;
+}
+
+.note-content h1 { font-size: 1.5em; }
+.note-content h2 { font-size: 1.3em; }
+.note-content h3 { font-size: 1.1em; }
+
+.note-content p {
+  margin: 8px 0;
+}
+
+.note-content ul,
+.note-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.note-content li {
+  margin: 4px 0;
+}
+
+.note-content code {
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.dark .note-content code {
+  background-color: #2a2a2a;
+  color: #eee;
+}
+
+.note-content pre {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.dark .note-content pre {
+  background-color: #2a2a2a;
+  color: #eee;
+}
+
+.note-content blockquote {
+  border-left: 4px solid #095633;
+  margin: 10px 0;
+  padding-left: 15px;
+  color: #666;
+  font-style: italic;
+}
+
+.dark .note-content blockquote {
+  color: #999;
+}
+
+.note-content a {
+  color: #095633;
+  text-decoration: none;
+}
+
+.note-content a:hover {
+  text-decoration: underline;
+}
+
+.note-content strong {
+  font-weight: bold;
+}
+
+.note-content em {
+  font-style: italic;
+}
+
 .note-footer {
   border-top: 1px solid #eee;
   padding-top: 8px;
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .dark .note-footer {
@@ -90,5 +186,42 @@
 
 .dark .note-footer small {
   color: #666;
+}
+
+.note-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn, .delete-btn {
+  background: none;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #666;
+}
+
+.dark .edit-btn, .dark .delete-btn {
+  border-color: #444;
+  color: #999;
+}
+
+.edit-btn:hover {
+  background-color: #e3f2fd;
+}
+
+.delete-btn:hover {
+  background-color: #ffebee;
+}
+
+.dark .edit-btn:hover {
+  background-color: #1e3a5f;
+}
+
+.dark .delete-btn:hover {
+  background-color: #4a1f1f;
 }
 
