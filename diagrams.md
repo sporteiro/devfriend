@@ -243,3 +243,31 @@ graph LR
 4. **Separación de responsabilidades**: Cada capa tiene un propósito claro
 5. **Inversión de dependencias**: El core define las interfaces, no la infraestructura
 
+---
+
+## Nuevo diagrama para la memoria:
+
+```mermaid
+graph TD
+    A[🖥️ Frontend (Vue.js 3 SPA)] -- REST API --> B[⚙️ Backend (FastAPI)]
+    B -- SQL --> C[💾 Base de datos (PostgreSQL)]
+    B -- Secrets API / OAuth --> D[🔐 External Services (Secrets, Auth APIs, Integrations)]
+
+    subgraph Infraestructura
+        C
+        D
+    end
+
+    %% Estilos para claridad
+    classDef frontend fill:#e1f5fe
+    classDef backend fill:#bbdefb
+    classDef infrastructure fill:#ffcdd2
+    class A frontend
+    class B backend
+    class C,D infrastructure
+```
+
+---
+
+# Otros diagramas (de clases, de base de datos, etc.) van debajo...
+
