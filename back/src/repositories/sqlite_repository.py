@@ -48,16 +48,12 @@ class SQLiteNoteRepository(NoteRepository):
 
     def find_all(self) -> List[Note]:
         with self._get_connection() as conn:
-            rows = conn.execute(
-                "SELECT * FROM notes ORDER BY created_at DESC"
-            ).fetchall()
+            rows = conn.execute("SELECT * FROM notes ORDER BY created_at DESC").fetchall()
             return [Note(**dict(row)) for row in rows]
 
     def find_by_id(self, note_id: int) -> Optional[Note]:
         with self._get_connection() as conn:
-            row = conn.execute(
-                "SELECT * FROM notes WHERE id = ?", (note_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM notes WHERE id = ?", (note_id,)).fetchone()
             return Note(**dict(row)) if row else None
 
     def delete(self, note_id: int) -> bool:
