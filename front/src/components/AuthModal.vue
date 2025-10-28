@@ -127,46 +127,34 @@ export default {
       }
     },
     async login() {
-      // Simular login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (this.formData.email === 'demo@devfriend.com' && this.formData.password === 'demo123') {
-        localStorage.setItem('devfriend_user', JSON.stringify({
-          name: 'Demo User',
-          email: this.formData.email,
-          loginTime: new Date().toISOString(),
-        }));
-        return;
+      const { authService } = await import('../services/authService');
+      await authService.login(this.formData.email, this.formData.password);
+      const user = await authService.getCurrentUser();
+      if (user) {
+        localStorage.setItem(
+          'devfriend_user',
+          JSON.stringify({
+            name: user.email.split('@')[0],
+            email: user.email,
+            loginTime: new Date().toISOString(),
+          })
+        );
       }
-      throw new Error('Incorrect credentials');
     },
     async register() {
-      // Simular registro
-      await new Promise(resolve => setTimeout(resolve, 1000));
       if (this.formData.password.length < 6) {
         throw new Error('Password must be at least 6 characters');
       }
-      localStorage.setItem('devfriend_user', JSON.stringify({
-        name: this.formData.name,
-        email: this.formData.email,
-        loginTime: new Date().toISOString(),
-      }));
+      const { authService } = await import('../services/authService');
+      await authService.register(this.formData.email, this.formData.password);
+      await this.login();
     },
     async loginWithGoogle() {
       this.loading = true;
       this.error = null;
-      
+
       try {
-        // Simular login con Google
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        localStorage.setItem('devfriend_user', JSON.stringify({
-          name: 'Google User',
-          email: 'user@gmail.com',
-          loginTime: new Date().toISOString(),
-        }));
-        this.$emit('success');
-        this.closeModal();
-      } catch (error) {
-        this.error = 'Error signing in with Google';
+        this.error = 'Google OAuth not yet implemented. Use email/password for now.';
       } finally {
         this.loading = false;
       }

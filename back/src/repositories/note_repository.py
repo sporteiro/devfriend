@@ -18,5 +18,9 @@ class NoteRepository(ABC):
         pass
 
     @abstractmethod
+    def find_by_user(self, user_id: int) -> List[Note]:
+        pass
+
+    @abstractmethod
     def delete(self, note_id: int) -> bool:
         pass
