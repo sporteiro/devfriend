@@ -1,33 +1,39 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        args: ["--line-length=120"]
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["--profile=black", "--line-length=120"]
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
-      - id: flake8
-        args: ["--max-line-length=120"]
   - repo: local
     hooks:
-      - id: eslint-frontend
-        name: eslint (frontend)
-        entry: sh -c 'command -v npm >/dev/null 2>&1 || { echo "npm not found, skipping ESLint" >&2; exit 0; }; npm --prefix front run lint'
+      - id: black-autofix
+        name: "Black (autofix)"
+        entry: bash -c 'cd back && source venv/bin/activate && black src/; exit 0'
         language: system
         pass_filenames: false
-        always_run: true
-        files: ^front/
-      - id: pytest-optional
-        name: pytest (optional)
-        entry: sh -c 'command -v pytest >/dev/null 2>&1 || { echo "pytest not found, skipping tests" >&2; exit 0; }; pytest'
+  - repo: local
+    hooks:
+      - id: isort-autofix
+        name: "isort (autofix)"
+        entry: bash -c 'cd back && source venv/bin/activate && isort src/; exit 0'
         language: system
         pass_filenames: false
-        always_run: true
+  - repo: local
+    hooks:
+      - id: flake8-check
+        name: "Flake8 (check)"
+        entry: bash -c 'cd back && source venv/bin/activate && flake8 src/; exit 0'
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: eslint-check
+        name: "ESLint (check)"
+        entry: bash -c 'cd front && npm run lint; exit 0'
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: "Pytest (check)"
+        entry: bash -c 'cd back && source venv/bin/activate && if [ -d tests ] && [ "$(ls -A tests)" ]; then pytest; fi; exit 0'
+        language: system
+        pass_filenames: false
 
-
+default_install_hook_types: [pre-commit]
+fail_fast: false

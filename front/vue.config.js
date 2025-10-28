@@ -4,7 +4,7 @@ module.exports = defineConfig({
   pages: {
     index: {
       entry: 'src/main.js',
-      title: 'DevFriend - Developer Productivity Hub'
+      title: 'DevFriend - You are not alone'
     }
   }
 })
