@@ -1,0 +1,42 @@
+{
+  "name": "devfriend",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">   <img src=\"front/src/assets/logo.png\" alt=\"DevFriend Logo\" width=\"200\"/>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "lint:frontend": "cd front && npm run lint",
+    "lint:backend": "cd back && flake8 src/ && isort --check-only src/",
+    "format:frontend": "cd front && prettier --write \"src/**/*.{js,vue,css}\"",
+    "format:backend": "cd back && isort src/",
+    "test:backend": "cd back && python -m pytest",
+    "lint-staged": "lint-staged"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sporteiro/devfriend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sporteiro/devfriend/issues"
+  },
+  "homepage": "https://github.com/sporteiro/devfriend#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "front/**/*.{js,vue,css}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "back/**/*.py": [
+      "isort",
+      "flake8"
+    ]
+  }
+}
