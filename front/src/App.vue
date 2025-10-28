@@ -69,6 +69,19 @@
           >
             Export
           </button>
+          <input type="file" id="import-input" ref="importInput" accept="application/json"
+              @change="handleImportNotes"
+              style="display: none;"
+          />
+          <button
+            @click="$refs.importInput.click()"
+            class="export-btn"
+            style="margin-left: 0;"
+            title="Import notes from JSON file"
+            aria-label="Import notes"
+          >
+            Import
+          </button>
         </div>
         
         <NoteForm 
@@ -285,6 +298,44 @@ export default {
         URL.revokeObjectURL(url);
       } catch (error) {
         this.error = 'Error exporting notes';
+      }
+    },
+    async handleImportNotes(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const importData = JSON.parse(text);
+        if (!importData.notes || !Array.isArray(importData.notes)) {
+          this.$toast.error('Invalid import file: missing notes array');
+          return;
+        }
+        const existingNotes = await this.notes;
+        const existingContents = new Set(existingNotes.map(n => n.content));
+        let imported = 0;
+        let duplicate = 0;
+        for (const note of importData.notes) {
+          if (note.content && !existingContents.has(note.content)) {
+            try {
+              await this.createNote(note.content);
+              imported++;
+            } catch (e) {
+              // ignorar notas individuales que fallen
+            }
+          } else {
+            duplicate++;
+          }
+        }
+        if(imported > 0) {
+          this.$toast.success(`${imported} notes imported${duplicate > 0 ? ", " + duplicate + " duplicates skipped" : ''}`);
+        } else {
+          this.$toast.info('No new notes were imported (all duplicates)');
+        }
+        this.loadNotes(); // refresca
+      } catch (err) {
+        this.$toast.error('Error importing notes: ' + err.message);
+      } finally {
+        event.target.value = '';
       }
     },
     async checkAuth() {
