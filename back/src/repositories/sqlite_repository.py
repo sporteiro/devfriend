@@ -56,6 +56,14 @@ class SQLiteNoteRepository(NoteRepository):
             row = conn.execute("SELECT * FROM notes WHERE id = ?", (note_id,)).fetchone()
             return Note(**dict(row)) if row else None
 
+    def find_by_user(self, user_id: int) -> List[Note]:
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                "SELECT * FROM notes WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,),
+            ).fetchall()
+            return [Note(**dict(row)) for row in rows]
+
     def delete(self, note_id: int) -> bool:
         with self._get_connection() as conn:
             cursor = conn.execute("DELETE FROM notes WHERE id = ?", (note_id,))

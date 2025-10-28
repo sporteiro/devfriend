@@ -222,11 +222,17 @@ export default {
     async createNote(content) {
       this.error = null;
       try {
-        const newNote = await noteService.createNote(content);
-        this.notes.unshift(newNote); // Agregar inmediatamente a la lista
+        const title = this.extractTitle(content);
+        const newNote = await noteService.createNote(title, content);
+        this.notes.unshift(newNote);
       } catch (error) {
         this.error = error.message;
       }
+    },
+    extractTitle(content) {
+      const lines = content.split('\n');
+      const firstLine = lines[0] || 'Untitled';
+      return firstLine.replace(/^#+ /, '').substring(0, 100);
     },
     editNote(note) {
       this.editingNote = note;
@@ -234,8 +240,13 @@ export default {
     async updateNote(updatedNote) {
       this.error = null;
       try {
-        const updated = await noteService.updateNote(updatedNote.id, updatedNote.content);
-        const index = this.notes.findIndex(n => n.id === updatedNote.id);
+        const title = this.extractTitle(updatedNote.content);
+        const updated = await noteService.updateNote(
+          updatedNote.id,
+          title,
+          updatedNote.content
+        );
+        const index = this.notes.findIndex((n) => n.id === updatedNote.id);
         if (index !== -1) {
           this.notes[index] = updated;
         }
@@ -276,10 +287,14 @@ export default {
         this.error = 'Error exporting notes';
       }
     },
-    checkAuth() {
+    async checkAuth() {
+      const { authService } = await import('./services/authService');
       const userData = localStorage.getItem('devfriend_user');
       if (userData) {
         this.user = JSON.parse(userData);
+      }
+      if (authService.isAuthenticated()) {
+        await this.loadNotes();
       }
     },
     showLogin() {
@@ -288,13 +303,18 @@ export default {
     hideAuthModal() {
       this.showAuthModal = false;
     },
-    onAuthSuccess() {
-      this.checkAuth();
+    async onAuthSuccess() {
+      await this.checkAuth();
+      await this.loadNotes();
       this.hideAuthModal();
     },
-    logout() {
+    async logout() {
+      const { authService } = await import('./services/authService');
+      authService.logout();
       localStorage.removeItem('devfriend_user');
       this.user = null;
+      this.notes = [];
+      await this.loadNotes();
     },
   },
   computed: {

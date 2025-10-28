@@ -38,7 +38,10 @@ class PostgreSQLNoteRepository(NoteRepository):
                         id SERIAL PRIMARY KEY,
                         title TEXT NOT NULL,
                         content TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        user_id INTEGER,
+                        is_archived BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                     )
                 """
                 )
@@ -53,14 +56,17 @@ class PostgreSQLNoteRepository(NoteRepository):
                 if note.id:
                     # Update existing note
                     cursor.execute(
-                        "UPDATE notes SET title = %s, content = %s WHERE id = %s RETURNING *",
-                        (note.title, note.content, note.id),
+                        """UPDATE notes 
+                           SET title = %s, content = %s, is_archived = %s 
+                           WHERE id = %s RETURNING *""",
+                        (note.title, note.content, note.is_archived, note.id),
                     )
                 else:
                     # Insert new note
                     cursor.execute(
-                        "INSERT INTO notes (title, content) VALUES (%s, %s) RETURNING *",
-                        (note.title, note.content),
+                        """INSERT INTO notes (title, content, user_id, is_archived) 
+                           VALUES (%s, %s, %s, %s) RETURNING *""",
+                        (note.title, note.content, note.user_id, note.is_archived),
                     )
                 conn.commit()
                 row = cursor.fetchone()
@@ -85,6 +91,19 @@ class PostgreSQLNoteRepository(NoteRepository):
                 cursor.execute("SELECT * FROM notes WHERE id = %s", (note_id,))
                 row = cursor.fetchone()
                 return Note(**dict(row)) if row else None
+        finally:
+            conn.close()
+
+    def find_by_user(self, user_id: int) -> List[Note]:
+        conn = self._get_connection()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(
+                    "SELECT * FROM notes WHERE user_id = %s ORDER BY created_at DESC",
+                    (user_id,),
+                )
+                rows = cursor.fetchall()
+                return [Note(**dict(row)) for row in rows]
         finally:
             conn.close()
 
