@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth_controller import router as auth_router
 from src.api.note_controller import router as note_router
+from src.api.secret_controller import router as secret_router
 
 app = FastAPI(title="DevFriend API", version="1.0.0")
 
@@ -16,6 +17,7 @@ app.add_middleware(
 
 app.include_router(auth_router, tags=["Authentication"])
 app.include_router(note_router, tags=["Notes"])
+app.include_router(secret_router, tags=["Secrets"])
 
 
 @app.get("/")

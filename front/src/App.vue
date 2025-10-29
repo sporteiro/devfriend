@@ -157,17 +157,7 @@
 
       <!-- Sección Credentials -->
       <div v-else-if="currentSection === 'credentials'">
-        <div class="section-placeholder">
-          <p>Credentials Management</p>
-          <div class="mock-content">
-            <div class="mock-item">
-              <span>GitHub Token configured</span>
-            </div>
-            <div class="mock-item">
-              <span>Gmail API configured</span>
-            </div>
-          </div>
-        </div>
+        <CredentialsList />
       </div>
     </main>
 
@@ -185,6 +175,7 @@ import AppSidebar from "./components/AppSidebar.vue";
 import NoteForm from "./components/NoteForm.vue";
 import NoteList from "./components/NoteList.vue";
 import AuthModal from "./components/AuthModal.vue";
+import CredentialsList from "./components/CredentialsList.vue";
 import { noteService } from "./services/noteService.js";
 import "./App.css";
 
@@ -195,6 +186,7 @@ export default {
     NoteForm,
     NoteList,
     AuthModal,
+    CredentialsList,
   },
   data() {
     return {
