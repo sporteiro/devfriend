@@ -28,6 +28,8 @@ services:
       DB_NAME: devfriend
       DB_USER: devfriend
       DB_PASSWORD: devfriend
+    env_file:
+      - ./back/.env
     depends_on:
       postgres:
         condition: service_healthy
