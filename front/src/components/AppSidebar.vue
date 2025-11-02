@@ -15,8 +15,8 @@
       </a>
       <a 
         href="#" 
-        :class="{ active: currentSection === 'email' }"
-        @click="navigateTo('email')"
+        :class="{ active: currentSection === 'emailmodal' }"
+        @click="navigateTo('emailmodal')"
         class="nav-item"
       >
         Email
