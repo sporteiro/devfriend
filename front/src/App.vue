@@ -26,7 +26,7 @@
       <!-- Header con título y modo oscuro -->
       <div class="content-header">
         <h1 v-if="currentSection === 'notes'">Notes</h1>
-        <h1 v-else-if="currentSection === 'email'">Email</h1>
+        <h1 v-else-if="currentSection === 'emailmodal'">Email</h1>
         <h1 v-else-if="currentSection === 'repository'">Repository</h1>
         <h1 v-else-if="currentSection === 'messages'">Messages</h1>
         <h1 v-else-if="currentSection === 'credentials'">Credentials</h1>
@@ -103,6 +103,7 @@
       </div>
 
       <!-- Sección Email -->
+      <!--
       <div v-else-if="currentSection === 'email'">
         <div class="section-placeholder">
           <p>Gmail Integration</p>
@@ -120,6 +121,12 @@
           </div>
         </div>
       </div>
+      -->
+
+      <div v-else-if="currentSection === 'emailmodal'">
+        <EmailModal />
+      </div>
+
 
       <!-- Sección Repository -->
       <div v-else-if="currentSection === 'repository'">
@@ -176,6 +183,7 @@ import NoteForm from "./components/NoteForm.vue";
 import NoteList from "./components/NoteList.vue";
 import AuthModal from "./components/AuthModal.vue";
 import CredentialsList from "./components/CredentialsList.vue";
+import EmailModal from "./components/EmailModal.vue";
 import { noteService } from "./services/noteService.js";
 import "./App.css";
 
@@ -187,6 +195,7 @@ export default {
     NoteList,
     AuthModal,
     CredentialsList,
+    EmailModal,
   },
   data() {
     return {

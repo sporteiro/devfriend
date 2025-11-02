@@ -107,32 +107,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.cred-form {
-  padding: 16px 0;
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 14px;
-}
-.form-group label {
-  font-weight: 500;
-  margin-bottom: 5px;
-}
-.form-group input,
-.form-group select {
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #aaa;
-  font-size: 15px;
-}
-.actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 15px;
-}
-button.cancel-btn {
-  background: #ccc; color: #222;
-}
-</style>
+<style scoped src="./CredentialsList.css"></style>
