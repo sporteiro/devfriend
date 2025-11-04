@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 class FernetEncryptionAdapter:
     """
-    Utilidad para cifrar y descifrar campos sensibles usando Fernet/AES y clave maestra de entorno.
+    Utility to encrypt and decrypt sensitive fields using Fernet/AES and master key from environment.
     """
     def __init__(self):
         key = os.getenv('DEVFRIEND_ENCRYPTION_KEY')
@@ -17,12 +17,12 @@ class FernetEncryptionAdapter:
         self.fernet = Fernet(key)
 
     def encrypt(self, data: str) -> str:
-        """Cifra un string. Retorna el string cifrado (base64)."""
+        """Encrypt a string. Returns the encrypted string (base64)."""
         token = self.fernet.encrypt(data.encode('utf-8'))
         return token.decode('utf-8')
 
     def decrypt(self, token: str) -> str:
-        """Descifra un string previamente cifrado. Si falla, retorna string vacío."""
+        """Decrypt a previously encrypted string. If it fails, returns empty string."""
         try:
             data = self.fernet.decrypt(token.encode('utf-8'))
             return data.decode('utf-8')

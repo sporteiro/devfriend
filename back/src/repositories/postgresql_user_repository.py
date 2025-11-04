@@ -10,8 +10,8 @@ from src.repositories.user_repository import UserRepository
 
 class PostgreSQLUserRepository(UserRepository):
     """
-    Adaptador secundario para persistencia de usuarios en PostgreSQL.
-    Implementa el puerto UserRepository.
+    Secondary adapter for user persistence in PostgreSQL.
+    Implements the UserRepository port.
     """
 
     def __init__(

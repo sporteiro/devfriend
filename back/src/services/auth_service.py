@@ -7,8 +7,8 @@ from src.utils.security import create_access_token, hash_password, verify_passwo
 
 class AuthService:
     """
-    Servicio de aplicación para autenticación (capa hexagonal).
-    Orquesta la lógica de negocio para registro, login y validación.
+    Application service for authentication (hexagonal layer).
+    Orchestrates business logic for registration, login and validation.
     """
 
     def __init__(self, user_repository: UserRepository):
@@ -16,52 +16,52 @@ class AuthService:
 
     def register_user(self, user_data: UserCreate) -> User:
         """
-        Registra un nuevo usuario.
-        Lanza excepción si el email ya existe.
+        Register a new user.
+        Raises exception if email already exists.
         """
-        # Verificar si el usuario ya existe
+        # Check if user already exists
         existing_user = self.user_repository.find_by_email(user_data.email)
         if existing_user:
             raise ValueError("User with this email already exists")
 
-        # Hash de la contraseña
+        # Hash the password
         password_hash = hash_password(user_data.password)
 
-        # Crear usuario
+        # Create user
         new_user = User(email=user_data.email, password_hash=password_hash)
 
-        # Guardar en repositorio
+        # Save to repository
         return self.user_repository.save(new_user)
 
     def login_user(self, credentials: UserLogin) -> Optional[str]:
         """
-        Autentica un usuario y retorna un JWT token.
-        Retorna None si las credenciales son inválidas.
+        Authenticate a user and return a JWT token.
+        Returns None if credentials are invalid.
         """
-        # Buscar usuario por email
+        # Find user by email
         user = self.user_repository.find_by_email(credentials.email)
         if not user:
             return None
 
-        # Verificar contraseña
+        # Verify password
         if not verify_password(credentials.password, user.password_hash):
             return None
 
-        # Verificar que el usuario esté activo
+        # Verify that the user is active
         if not user.is_active:
             return None
 
-        # Generar JWT token
+        # Generate JWT token
         token_data = {"sub": str(user.id), "email": user.email}
         token = create_access_token(token_data)
 
         return token
 
     def get_user_by_id(self, user_id: int) -> Optional[User]:
-        """Obtiene un usuario por ID."""
+        """Get a user by ID."""
         return self.user_repository.find_by_id(user_id)
 
     def get_user_by_email(self, email: str) -> Optional[User]:
-        """Obtiene un usuario por email."""
+        """Get a user by email."""
         return self.user_repository.find_by_email(email)
 

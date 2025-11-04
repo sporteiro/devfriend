@@ -85,7 +85,7 @@ class PostgreSQLSecretRepository(SecretRepository):
                 cursor.execute("SELECT * FROM secrets WHERE id=%s", (secret_id,))
                 row = cursor.fetchone()
                 if row:
-                    # solo desciframos el encrypted_value, nunca lo exponemos
+                    # only decrypt the encrypted_value, never expose it
                     row['encrypted_value'] = self.crypto.decrypt(row['encrypted_value'])
                     return Secret(**row)
                 return None
@@ -100,7 +100,7 @@ class PostgreSQLSecretRepository(SecretRepository):
                 rows = cursor.fetchall()
                 secrets = []
                 for row in rows:
-                    row['encrypted_value'] = '*****'  # nunca devolvemos valor real
+                    row['encrypted_value'] = '*****'  # never return real value
                     secrets.append(Secret(**row))
                 return secrets
         finally:

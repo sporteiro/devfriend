@@ -8,8 +8,8 @@ class Secret(BaseModel):
     id: Optional[int] = None
     user_id: int
     name: str
-    encrypted_value: str  # JSON cifrado (con todos los campos secretos)
-    service_type: str  # Ej: 'github', 'gmail', etc.
+    encrypted_value: str  # Encrypted JSON (with all secret fields)
+    service_type: str  # Example: 'github', 'gmail', etc.
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -19,7 +19,7 @@ class Secret(BaseModel):
 class SecretCreate(BaseModel):
     name: str
     service_type: str
-    # datos_secrets es un diccionario con todos los campos sensibles, se convertirá a JSON y será cifrado
+    # datos_secrets is a dictionary with all sensitive fields, will be converted to JSON and encrypted
     datos_secrets: Dict[str, Any]
 
 class SecretResponse(BaseModel):
@@ -30,6 +30,6 @@ class SecretResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    # No se expone encrypted_value nunca en respuesta API
+    # encrypted_value is never exposed in API response
     class Config:
         from_attributes = True

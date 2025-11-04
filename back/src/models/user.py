@@ -6,8 +6,8 @@ from pydantic import BaseModel, EmailStr
 
 class User(BaseModel):
     """
-    Entidad de dominio User (núcleo hexagonal).
-    Representa un usuario del sistema con sus datos básicos.
+    User domain entity (hexagonal core).
+    Represents a system user with their basic data.
     """
 
     id: Optional[int] = None
@@ -22,21 +22,21 @@ class User(BaseModel):
 
 
 class UserCreate(BaseModel):
-    """DTO para creación de usuario."""
+    """DTO for user creation."""
 
     email: EmailStr
     password: str
 
 
 class UserLogin(BaseModel):
-    """DTO para login de usuario."""
+    """DTO for user login."""
 
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
-    """DTO para respuesta de usuario (sin password)."""
+    """DTO for user response (without password)."""
 
     id: int
     email: EmailStr

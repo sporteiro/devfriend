@@ -18,23 +18,23 @@
     </div>
 
     <!-- Estado con integración existente -->
-    <div v-else-if="emailIntegration" class="integration-existing">
+    <div v-else-if="emailIntegration && !loading" class="integration-existing">
       <div class="integration-info">
         <h3>Current Integration</h3>
         <div class="integration-details">
           <div class="detail-item">
             <span class="label">Provider:</span>
-            <span class="value">{{ emailIntegration.provider }}</span>
+            <span class="value">{{ emailIntegration.provider || 'gmail' }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Status:</span>
-            <span :class="['value', `status-${emailIntegration.status}`]">
-              {{ emailIntegration.status }}
+            <span :class="['value', `status-${emailIntegration.status || 'unknown'}`]">
+              {{ emailIntegration.status || 'unknown' }}
             </span>
           </div>
           <div class="detail-item">
             <span class="label">Email:</span>
-            <span class="value">{{ emailIntegration.email_address }}</span>
+            <span class="value">{{ emailIntegration.email_address || 'N/A' }}</span>
           </div>
           <div class="detail-item">
             <span class="label">Last Sync:</span>
@@ -43,16 +43,51 @@
         </div>
         
         <div class="integration-actions">
-          <button @click="viewEmails" class="action-btn primary">
-            View Emails
+          <button 
+            @click="viewEmails" 
+            class="action-btn primary" 
+            :disabled="loadingEmails"
+          >
+            {{ loadingEmails ? 'Loading...' : 'View Emails' }}
           </button>
-          <button @click="syncEmails" class="action-btn secondary">
+          <button 
+            @click="syncEmails" 
+            class="action-btn secondary"
+          >
             Sync Now
           </button>
-          <button @click="deleteIntegration" class="action-btn danger">
+          <button 
+            @click="deleteIntegration" 
+            class="action-btn danger"
+          >
             Remove
           </button>
         </div>
+      </div>
+      
+      <!-- Lista de emails -->
+      <div v-if="showEmailsList" class="emails-list">
+        <h3>Recent Emails ({{ emails.length }})</h3>
+        <div v-if="loadingEmails" class="loading-emails">
+          Loading emails...
+        </div>
+        <div v-else-if="emails.length === 0" class="no-emails">
+          No emails found
+        </div>
+        <ul v-else class="emails-list-items">
+          <li v-for="email in emails" :key="email.id" class="email-item">
+            <div class="email-title">{{ email.subject || '(No subject)' }}</div>
+            <div class="email-meta">
+              <span class="email-from">{{ email.sender || email.from || 'Unknown sender' }}</span>
+              <span class="email-date">{{ formatDate(email.date) }}</span>
+              <span v-if="!email.read" class="email-unread-badge">Unread</span>
+            </div>
+            <div v-if="email.snippet || email.preview" class="email-snippet">
+              {{ email.snippet || email.preview }}
+            </div>
+          </li>
+        </ul>
+        <button @click="showEmailsList = false" class="close-emails-btn">Close</button>
       </div>
       
       <div class="actions">
@@ -68,9 +103,12 @@
         No email integration configured yet.
       </div>
       <div class="actions">
-        <button @click="showConfigModal = true" class="add-btn">
-          + Add Integration
+        <button @click="connectWithOAuth" class="add-btn" :disabled="connecting" style="width: 100%; max-width: 300px; padding: 15px; font-size: 16px;">
+          {{ connecting ? 'Connecting...' : '🔗 Connect with Google' }}
         </button>
+        <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-secondary);">
+          This will automatically create credentials and integration with refresh token.
+        </p>
       </div>
     </div>
 
@@ -109,6 +147,21 @@
               <a href="#credentials">Add credentials first</a>
             </p>
           </div>
+          
+          <div class="oauth-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+            <p style="margin-bottom: 10px; font-weight: bold;">Connect with Google OAuth:</p>
+            <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+              This will automatically create credentials and integration with refresh token.
+            </p>
+            <button 
+              @click="connectWithOAuth" 
+              class="oauth-btn"
+              :disabled="connecting"
+              style="width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
+            >
+              {{ connecting ? 'Connecting...' : '🔗 Connect with Google' }}
+            </button>
+          </div>
         </div>
         
         <div class="modal-actions">
@@ -143,12 +196,36 @@ export default {
       selectedProvider: 'gmail',
       selectedCredentialId: '',
       credentials: [],
-      connecting: false
+      connecting: false,
+      emails: [],
+      showEmailsList: false,
+      loadingEmails: false
     };
   },
   async mounted() {
     await this.loadEmailIntegrations();
     await this.loadCredentials();
+    
+    // Check if we just came back from OAuth callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthSuccess = urlParams.get('oauth_success');
+    const integrationId = urlParams.get('integration_id');
+    
+    if (oauthSuccess === 'true') {
+      console.log('OAuth success detected, reloading integrations...');
+      // Reload integrations after OAuth success
+      await this.loadEmailIntegrations();
+      await this.loadCredentials();
+      
+      if (integrationId) {
+        this.$toast.success('Gmail integration connected successfully!');
+      } else {
+        this.$toast.info('OAuth completed, please check your integrations');
+      }
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   },
   computed: {
     gmailCredentials() {
@@ -165,13 +242,23 @@ export default {
       
       try {
         const integrations = await emailService.getIntegrations();
+        console.log('Loaded integrations:', integrations);
         // Asumimos que por ahora solo manejamos una integración
         this.emailIntegration = integrations.length > 0 ? integrations[0] : null;
+        console.log('Email integration set to:', this.emailIntegration);
       } catch (error) {
         console.error('Error loading email integrations:', error);
-        this.error = 'Could not connect to server. Please try again.';
+        if (error.response && error.response.status === 403) {
+          this.error = 'Authentication required. Please log in.';
+        } else if (error.response && error.response.status === 404) {
+          // No integrations found, that's OK
+          this.emailIntegration = null;
+        } else {
+          this.error = 'Could not connect to server. Please try again.';
+        }
       } finally {
         this.loading = false;
+        console.log('Loading finished. emailIntegration:', this.emailIntegration, 'loading:', this.loading);
       }
     },
     
@@ -209,6 +296,66 @@ export default {
       }
     },
     
+    async connectWithOAuth() {
+      this.connecting = true;
+      try {
+        // Get auth token
+        const token = localStorage.getItem('devfriend_token');
+        if (!token) {
+          this.$toast.error('Please log in first');
+          this.connecting = false;
+          return;
+        }
+        
+        console.log('Initiating OAuth flow for Gmail integration...');
+        
+        // Use axios to get OAuth URL (simplified - no secret_id needed)
+        const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
+        const axios = (await import('axios')).default;
+        
+        try {
+          // Make request to get OAuth URL (uses env vars automatically)
+          const url = `${API_URL}/auth/google/authorize`;
+          console.log('Calling OAuth authorize endpoint:', url);
+            
+          const response = await axios.get(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            }
+          });
+          
+          console.log('OAuth response:', response.data);
+          
+          // Get the auth_url from response
+          const authUrl = response.data?.auth_url;
+          if (authUrl) {
+            console.log('Redirecting to Google OAuth:', authUrl);
+            // Redirect to Google OAuth
+            window.location.href = authUrl;
+          } else {
+            throw new Error('No auth URL received from OAuth endpoint');
+          }
+        } catch (error) {
+          console.error('OAuth request error:', error);
+          if (error.response) {
+            console.error('Error response:', error.response.status, error.response.data);
+            if (error.response.status === 401 || error.response.status === 403) {
+              this.$toast.error('Authentication failed. Please log in again.');
+              this.connecting = false;
+              return;
+            } else if (error.response.data?.detail) {
+              throw new Error(error.response.data.detail);
+            }
+          }
+          throw error;
+        }
+      } catch (error) {
+        console.error('Error initiating OAuth:', error);
+        this.$toast.error(error.message || 'Failed to start OAuth flow');
+        this.connecting = false;
+      }
+    },
+    
     async deleteIntegration() {
       if (!confirm('Are you sure you want to remove this email integration?')) {
         return;
@@ -227,16 +374,70 @@ export default {
     async syncEmails() {
       try {
         await emailService.syncEmails(this.emailIntegration.id);
-        this.$toast.success('Email sync started');
+        this.$toast.success('Email sync completed successfully');
+        // Reload integrations to get updated status and secret_id
+        await this.loadEmailIntegrations();
       } catch (error) {
         console.error('Error syncing emails:', error);
-        this.$toast.error('Failed to sync emails');
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to sync emails';
+        
+        // Check if it's a refresh_token error
+        if (errorMessage.includes('refresh_token') || errorMessage.includes('OAuth') || errorMessage.includes('authorize')) {
+          this.$toast.error('Missing OAuth authorization. Please connect with Google OAuth first.', {
+            duration: 5000
+          });
+          // Reload to get updated secret_id after auto-fix
+          await this.loadEmailIntegrations();
+          // Show config modal with OAuth option
+          this.showConfigModal = true;
+        } else {
+          this.$toast.error(errorMessage);
+        }
       }
     },
     
-    viewEmails() {
-      // TODO: Implementar vista de emails
-      this.$toast.info('Email viewer will be implemented soon');
+    async viewEmails() {
+      if (!this.emailIntegration || !this.emailIntegration.id) {
+        this.$toast.error('No email integration available');
+        return;
+      }
+      
+      this.loadingEmails = true;
+      this.showEmailsList = true;
+      
+      try {
+        // Get 10 most recent emails
+        const response = await emailService.getEmails(this.emailIntegration.id, {
+          max_results: 10
+        });
+        
+        // Backend returns array with subject, sender, date, snippet, etc.
+        this.emails = response || [];
+        
+        if (this.emails.length === 0) {
+          this.$toast.info('No emails found');
+        } else {
+          this.$toast.success(`Loaded ${this.emails.length} emails`);
+        }
+      } catch (error) {
+        console.error('Error loading emails:', error);
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to load emails';
+        
+        // Show error message with duration if it's about Gmail API not enabled
+        if (errorMessage.includes('Gmail API is not enabled')) {
+          this.$toast.error(errorMessage, {
+            duration: 8000
+          });
+        } else {
+          this.$toast.error(errorMessage);
+        }
+        
+        if (errorMessage.includes('refresh_token') || errorMessage.includes('OAuth')) {
+          this.showConfigModal = true;
+        }
+      } finally {
+        this.loadingEmails = false;
+      }
     },
     
     formatDate(dateString) {
