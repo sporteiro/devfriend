@@ -52,8 +52,6 @@ const credentialSchemas = {
   gmail: [
     { key: 'client_id', label: 'Client ID', secret: false, placeholder: '', },
     { key: 'client_secret', label: 'Client Secret', secret: true, placeholder: '', },
-    { key: 'refresh_token', label: 'Refresh Token', secret: true, placeholder: '', },
-    { key: 'redirect_uri', label: 'Redirect URI', secret: false, placeholder: '(optional)' },
   ],
   slack: [
     { key: 'bot_token', label: 'Bot Token', secret: true, placeholder: '', },

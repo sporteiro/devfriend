@@ -7,7 +7,7 @@ from src.models.secret import Secret
 class SecretRepository(ABC):
     @abstractmethod
     def save(self, secret: Secret) -> Secret:
-        """Guarda un secret (insert o update)."""
+        """Save a secret (insert or update)."""
         pass
 
     @abstractmethod

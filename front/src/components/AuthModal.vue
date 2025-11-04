@@ -154,8 +154,21 @@ export default {
       this.error = null;
 
       try {
-        this.error = 'Google OAuth not yet implemented. Use email/password for now.';
-      } finally {
+        const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
+        const axios = (await import('axios')).default;
+        
+        const response = await axios.get(`${API_URL}/auth/google/login`);
+        const authUrl = response.data?.auth_url;
+        
+        if (authUrl) {
+          // Redirect to Google OAuth
+          window.location.href = authUrl;
+        } else {
+          throw new Error('No auth URL received');
+        }
+      } catch (error) {
+        console.error('Error initiating Google login:', error);
+        this.error = error.response?.data?.detail || 'Failed to start Google login';
         this.loading = false;
       }
     },

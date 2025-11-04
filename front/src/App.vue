@@ -216,6 +216,7 @@ export default {
     this.isDarkMode = saved === "true";
     this.checkAuth();
     this.loadNotes();
+    this.handleOAuthCallback();
   },
   methods: {
     toggleDarkMode(value) {
@@ -367,6 +368,101 @@ export default {
       this.user = null;
       this.notes = [];
       await this.loadNotes();
+    },
+    async loginWithGoogle() {
+      try {
+        const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
+        const axios = (await import('axios')).default;
+        
+        const response = await axios.get(`${API_URL}/auth/google/login`);
+        const authUrl = response.data?.auth_url;
+        
+        if (authUrl) {
+          window.location.href = authUrl;
+        } else {
+          throw new Error('No auth URL received');
+        }
+      } catch (error) {
+        console.error('Error initiating Google login:', error);
+        this.$toast.error('Failed to start Google login');
+      }
+    },
+    async handleOAuthCallback() {
+      // Handle OAuth login callback
+      const urlParams = new URLSearchParams(window.location.search);
+      const oauthLoginSuccess = urlParams.get('oauth_login_success');
+      const oauthSuccess = urlParams.get('oauth_success');
+      const token = urlParams.get('token');
+      
+      // Handle Google login OAuth callback
+      if (oauthLoginSuccess === 'true' && token) {
+        // Save token first
+        localStorage.setItem('devfriend_token', token);
+        
+        // Get user info using authService (same way as native login)
+        try {
+          const { authService } = await import('./services/authService');
+          const user = await authService.getCurrentUser();
+          
+          if (user) {
+            localStorage.setItem(
+              'devfriend_user',
+              JSON.stringify({
+                name: user.email.split('@')[0],
+                email: user.email,
+                loginTime: new Date().toISOString(),
+              })
+            );
+            this.user = {
+              name: user.email.split('@')[0],
+              email: user.email,
+              loginTime: new Date().toISOString(),
+            };
+            
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            this.$toast.success('Logged in with Google successfully!');
+            
+            // Reload everything to update state
+            await this.checkAuth();
+            await this.loadNotes();
+          } else {
+            throw new Error('Failed to get user information');
+          }
+        } catch (error) {
+          console.error('Error getting user info:', error);
+          this.$toast.error('Failed to get user information');
+          // Clean URL even on error
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+      
+      // Handle Gmail OAuth callback (integration successful)
+      if (oauthSuccess === 'true') {
+        this.$toast.success('Gmail integration connected successfully!');
+        
+        // Reload email integrations if we're on that section
+        if (this.currentSection === 'emailmodal') {
+          // Trigger reload in EmailModal component
+          this.$nextTick(() => {
+            const emailModal = this.$children.find(child => child.$options.name === 'EmailModal');
+            if (emailModal && emailModal.loadEmailIntegrations) {
+              emailModal.loadEmailIntegrations();
+            }
+          });
+        }
+        
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      
+      // Handle OAuth error
+      const oauthError = urlParams.get('oauth_error');
+      if (oauthError) {
+        this.$toast.error(`OAuth error: ${oauthError}`);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     },
   },
   computed: {

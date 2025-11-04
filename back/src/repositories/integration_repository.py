@@ -14,7 +14,7 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
     
     def get_user_integrations(self, user_id: int, service_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Obtener todas las integraciones de un usuario
+        Get all integrations for a user
         """
         try:
             if service_type:
@@ -38,7 +38,7 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
 
     def get_integration(self, integration_id: int, user_id: int) -> Optional[Dict[str, Any]]:
         """
-        Obtener una integración específica del usuario
+        Get a specific integration for the user
         """
         try:
             query = "SELECT * FROM integrations WHERE id = %s AND user_id = %s"
@@ -50,12 +50,12 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
 
     def create_integration(self, integration_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Crear una nueva integración
+        Create a new integration
         """
         try:
-            print(f"🔍 Creating integration with data: {integration_data}")
+            print(f"Creating integration with data: {integration_data}")
             
-            # INSERT sin RETURNING
+            # INSERT without RETURNING
             query = """
                 INSERT INTO integrations 
                 (user_id, secret_id, service_type, config, is_active)
@@ -72,9 +72,9 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
                 integration_data.get('is_active', True)
             )
             
-            print("🔍 Insert executed, now fetching the last inserted integration")
+            print("Insert executed, now fetching the last inserted integration")
             
-            # Consulta para obtener la integración recién insertada
+            # Query to get the newly inserted integration
             fetch_query = """
                 SELECT * FROM integrations 
                 WHERE user_id = %s AND service_type = %s
@@ -86,32 +86,35 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
                 integration_data['service_type']
             )
             
-            print(f"🔍 Fetch result: {result}")
+            print(f"Fetch result: {result}")
             return result
         except Exception as e:
-            print(f"🔥 Error in create_integration: {e}")
+            print(f"Error in create_integration: {e}")
             logger.error(f"Error creating integration: {str(e)}")
             raise e
 
 
     def update_integration(self, integration_id: int, user_id: int, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-        Actualizar una integración
+        Update an integration
         """
         try:
-            # Verificar que la integración pertenece al usuario
+            # Verify that the integration belongs to the user
             integration = self.get_integration(integration_id, user_id)
             if not integration:
                 return None
 
             set_parts = []
             params = []
-            param_count = 1
 
             for field, value in update_data.items():
                 if value is not None:
-                    set_parts.append(f"{field} = %s")  # Cambiado a %s
-                    params.append(value)
+                    set_parts.append(f"{field} = %s")
+                    # Convert config dict to JSON string for PostgreSQL JSONB
+                    if field == 'config' and isinstance(value, dict):
+                        params.append(json.dumps(value))
+                    else:
+                        params.append(value)
 
             if not set_parts:
                 return integration
@@ -133,10 +136,10 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
 
     def delete_integration(self, integration_id: int, user_id: int) -> bool:
         """
-        Eliminar una integración
+        Delete an integration
         """
         try:
-            # Verificar que la integración pertenece al usuario
+            # Verify that the integration belongs to the user
             integration = self.get_integration(integration_id, user_id)
             if not integration:
                 return False

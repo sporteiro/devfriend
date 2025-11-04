@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+import traceback
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.middleware.auth_middleware import get_current_user_id
 from src.models.user import User
@@ -10,19 +12,18 @@ router = APIRouter()
 @router.get("/email/integrations")
 def get_email_integrations(current_user_id: int = Depends(get_current_user_id)):
     """
-    Obtener las integraciones de email del usuario
+    Get email integrations for the user
     """
     try:
-        print(f"🎯 DEBUG: Entering endpoint, user_id: {current_user_id}")
+        print(f"DEBUG: Entering endpoint, user_id: {current_user_id}")
         email_service = EmailService(current_user_id)
-        print("🎯 DEBUG: EmailService created")
+        print("DEBUG: EmailService created")
         integrations = email_service.get_email_integrations()
-        print(f"🎯 DEBUG: Got {len(integrations)} integrations")
+        print(f"DEBUG: Got {len(integrations)} integrations")
         return integrations
     except Exception as e:
-        print(f"🔥 ERROR in endpoint: {e}")
-        import traceback
-        print(f"🔥 TRACEBACK: {traceback.format_exc()}")
+        print(f"ERROR in endpoint: {e}")
+        print(f"TRACEBACK: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -37,13 +38,13 @@ def create_email_integration(integration_data: dict, current_user: User = Depend
         integration = email_service.create_email_integration(integration_data)
         return integration
     except Exception as e:
-        print(f'error creating email integration ACA: {e}')
+        print(f'Error creating email integration: {e}')
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/email/integrations/{integration_id}")
 def delete_email_integration(integration_id: int, current_user: User = Depends(get_current_user_id)):
     """
-    Eliminar una integración de email
+    Delete an email integration
     """
     try:
         integration_service = IntegrationService(current_user)
@@ -55,13 +56,24 @@ def delete_email_integration(integration_id: int, current_user: User = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/email/integrations/{integration_id}/emails")
-def get_emails(integration_id: int, current_user: User = Depends(get_current_user_id)):
+def get_emails(
+    integration_id: int,
+    current_user: User = Depends(get_current_user_id),
+    max_results: int = Query(default=50, ge=1, le=500, description="Maximum number of emails to return"),
+    query: str = Query(default=None, description="Gmail search query (e.g., 'is:unread', 'from:example@gmail.com')")
+):
     """
-    Obtener emails de una integración
+    Get emails from an integration
+    
+    Query examples:
+    - is:unread - Get unread emails
+    - from:example@gmail.com - Get emails from specific sender
+    - subject:meeting - Get emails with 'meeting' in subject
+    - after:2024/1/1 - Get emails after specific date
     """
     try:
         email_service = EmailService(current_user)
-        emails = email_service.get_emails(integration_id)
+        emails = email_service.get_emails(integration_id, max_results=max_results, query=query)
         return emails
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -69,7 +81,7 @@ def get_emails(integration_id: int, current_user: User = Depends(get_current_use
 @router.post("/email/integrations/{integration_id}/sync")
 def sync_emails(integration_id: int, current_user: User = Depends(get_current_user_id)):
     """
-    Sincronizar emails de una integración
+    Sync emails from an integration
     """
     try:
         email_service = EmailService(current_user)
@@ -81,7 +93,7 @@ def sync_emails(integration_id: int, current_user: User = Depends(get_current_us
 @router.get("/email/integrations/{integration_id}/stats")
 def get_email_stats(integration_id: int, current_user: User = Depends(get_current_user_id)):
     """
-    Obtener estadísticas de email
+    Get email statistics
     """
     try:
         email_service = EmailService(current_user)

@@ -22,7 +22,7 @@ class SecretService:
 
     def list_secrets(self, user_id: int) -> List[SecretResponse]:
         secrets = self.secret_repository.find_by_user(user_id)
-        # Solo retornamos los campos seguros (encrypted_value como '*****')
+        # Only return safe fields (encrypted_value as '*****')
         return [SecretResponse(**s.dict()) for s in secrets]
 
     def get_secret(self, user_id: int, secret_id: int) -> Optional[Secret]:

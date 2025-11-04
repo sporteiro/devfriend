@@ -10,7 +10,7 @@ class EmailRepository(PostgreSQLRepository):
     
     async def get_user_integrations(self, user_id: int):
         """
-        Obtener todas las integraciones de email de un usuario
+        Get all email integrations for a user
         """
         try:
             query = """
@@ -26,7 +26,7 @@ class EmailRepository(PostgreSQLRepository):
 
     async def get_integration(self, integration_id: int, user_id: int):
         """
-        Obtener una integración específica del usuario
+        Get a specific integration for the user
         """
         try:
             query = "SELECT * FROM email_integrations WHERE id = $1 AND user_id = $2"
@@ -38,7 +38,7 @@ class EmailRepository(PostgreSQLRepository):
 
     async def create_integration(self, integration_data: dict):
         """
-        Crear una nueva integración de email
+        Create a new email integration
         """
         try:
             query = """
@@ -62,7 +62,7 @@ class EmailRepository(PostgreSQLRepository):
 
     async def delete_integration(self, integration_id: int):
         """
-        Eliminar una integración de email
+        Delete an email integration
         """
         try:
             query = "DELETE FROM email_integrations WHERE id = $1"
@@ -73,7 +73,7 @@ class EmailRepository(PostgreSQLRepository):
 
     async def update_integration_status(self, integration_id: int, status: str):
         """
-        Actualizar el estado de una integración
+        Update the status of an integration
         """
         try:
             query = "UPDATE email_integrations SET status = $1, updated_at = NOW() WHERE id = $2"
@@ -84,7 +84,7 @@ class EmailRepository(PostgreSQLRepository):
 
     async def update_last_sync(self, integration_id: int):
         """
-        Actualizar la última sincronización
+        Update the last sync time
         """
         try:
             query = "UPDATE email_integrations SET last_sync = NOW(), updated_at = NOW() WHERE id = $1"

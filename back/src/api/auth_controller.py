@@ -8,12 +8,12 @@ from src.models.user import UserCreate, UserLogin, UserResponse
 from src.repositories.postgresql_user_repository import PostgreSQLUserRepository
 from src.services.auth_service import AuthService
 
-# Cargar variables de entorno
+# Load environment variables
 load_dotenv()
 
 router = APIRouter()
 
-# Configuración de PostgreSQL desde variables de entorno
+# PostgreSQL configuration from environment variables
 db_config = {
     "host": os.getenv("DB_HOST", "postgres"),
     "port": int(os.getenv("DB_PORT", "5432")),
@@ -22,14 +22,14 @@ db_config = {
     "password": os.getenv("DB_PASSWORD", "devfriend"),
 }
 
-# Inicializar servicio
+# Initialize service
 auth_service = AuthService(PostgreSQLUserRepository(**db_config))
 
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate):
     """
-    Registra un nuevo usuario.
+    Register a new user.
     """
     try:
         user = auth_service.register_user(user_data)
@@ -46,7 +46,7 @@ async def register(user_data: UserCreate):
 @router.post("/auth/login")
 async def login(credentials: UserLogin):
     """
-    Autentica un usuario y retorna un JWT token.
+    Authenticate a user and return a JWT token.
     """
     token = auth_service.login_user(credentials)
     if token is None:
@@ -62,7 +62,7 @@ async def login(credentials: UserLogin):
 @router.get("/auth/me", response_model=UserResponse)
 async def get_current_user(user_id: int = Depends(get_current_user_id)):
     """
-    Obtiene la información del usuario autenticado.
+    Get the authenticated user's information.
     """
     user = auth_service.get_user_by_id(user_id)
     if user is None:

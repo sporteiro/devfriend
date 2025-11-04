@@ -12,8 +12,8 @@ def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> int:
     """
-    Dependency para obtener el user_id del token JWT.
-    Lanza HTTPException 401 si el token es inválido.
+    Dependency to get the user_id from JWT token.
+    Raises HTTPException 401 if token is invalid.
     """
     token = credentials.credentials
     payload = decode_access_token(token)
@@ -51,8 +51,8 @@ def get_optional_user_id(
     ),
 ) -> Optional[int]:
     """
-    Dependency opcional para obtener el user_id del token JWT.
-    Retorna None si no hay token o es inválido (no lanza excepción).
+    Optional dependency to get the user_id from JWT token.
+    Returns None if there's no token or it's invalid (doesn't raise exception).
     """
     if credentials is None:
         return None
