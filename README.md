@@ -150,6 +150,7 @@ graph TB
 
 - Docker & Docker Compose
 - Git
+- Python 3 (for generating encryption keys)
 
 ### Installation
 
@@ -161,19 +162,20 @@ graph TB
 
 2. **Configure environment variables**
    
-   Create `back/.env` file:
-   ```env
-   DB_HOST=postgres
-   DB_PORT=5432
-   DB_NAME=devfriend
-   DB_USER=devfriend
-   DB_PASSWORD=devfriend
+   Copy the example file (it already contains a working encryption key):
+   ```bash
+   cd back
+   cp .env.example .env
    ```
+   
+   The `.env.example` file contains all required variables with working values for local development.
 
 3. **Start the application**
    ```bash
    docker compose up --build
    ```
+   
+   The database schema will be automatically initialized from `db_schema.sql` when PostgreSQL starts for the first time.
 
 4. **Access the application**
    - Frontend: http://localhost:88
@@ -249,16 +251,78 @@ DevFriend is deployed on [Render](https://render.com/):
 
 ### Deploy Your Own
 
-1. **Database**: Create a PostgreSQL instance on Render
-2. **Backend**: 
-   - Create a Web Service
-   - Set environment variables (DB_HOST, DB_PORT, etc.)
-   - Build command: `pip install -r requirements.txt`
-   - Start command: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
-3. **Frontend**:
-   - Create a Static Site
-   - Build command: `npm install && npm run build`
-   - Publish directory: `dist`
+#### 1. **Database Setup**
+Create a PostgreSQL instance (Render, AWS RDS, or any PostgreSQL provider) and note the connection details.
+
+#### 2. **Backend Environment Variables**
+Configure these environment variables in your hosting platform:
+
+**Required:**
+```bash
+# Database Configuration (use your production database)
+DB_HOST=your-production-db-host
+DB_PORT=5432
+DB_NAME=devfriend
+DB_USER=your-db-user
+DB_PASSWORD=your-db-password
+
+# Encryption Key (REQUIRED - generate a NEW one for production!)
+# Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+DEVFRIEND_ENCRYPTION_KEY=your-production-encryption-key
+
+# Frontend URL (REQUIRED for OAuth redirects)
+FRONTEND_URL=https://your-frontend-domain.com
+
+# Google OAuth (Required for Gmail integration and Google login)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# JWT Secret (Optional - defaults to "dev-secret-key-change-in-production")
+# Generate a secure random string for production
+JWT_SECRET_KEY=your-secure-jwt-secret-key
+```
+
+**Backend Deployment:**
+- Platform: Render, Railway, Heroku, AWS, etc.
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+
+#### 3. **Frontend Environment Variables**
+Create a `.env.production` file in the `front/` directory:
+
+```bash
+VUE_APP_API_URL=https://your-backend-domain.com
+```
+
+**Frontend Deployment:**
+- Build command: `npm install && npm run build`
+- Publish directory: `dist`
+- Make sure to set `VUE_APP_API_URL` as an environment variable during build
+
+#### 4. **Google Cloud Console Configuration**
+⚠️ **CRITICAL**: You must configure these redirect URIs in [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+
+1. Go to **APIs & Services** → **Credentials**
+2. Edit your OAuth 2.0 Client ID
+3. Add these **Authorized redirect URIs**:
+   - `https://your-backend-domain.com/auth/google/callback` (for Gmail integration)
+   - `https://your-backend-domain.com/auth/google/login/callback` (for Google login)
+4. **Enable Gmail API** in the APIs & Services section
+5. If your app is in "Testing" mode, add test users or publish it for production use
+
+#### 5. **Security Checklist**
+- ✅ Generate a **new** `DEVFRIEND_ENCRYPTION_KEY` for production (don't use the one from `.env.example`)
+- ✅ Set a secure `JWT_SECRET_KEY` (if not using default)
+- ✅ Use strong database passwords
+- ✅ Enable HTTPS (required for OAuth)
+- ✅ Keep `.env` files out of version control
+- ✅ Use environment variables, not hardcoded values
+
+#### 6. **Database Initialization**
+The database schema will be automatically initialized from `db_schema.sql` if you're using Docker. For managed databases, you may need to run the schema manually:
+```bash
+psql -h your-db-host -U your-db-user -d devfriend -f db_schema.sql
+```
 
 ---
 
