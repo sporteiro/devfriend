@@ -1,0 +1,12 @@
+{
+    "name": "playwright-tests",
+    "version": "1.0.0",
+    "devDependencies": {
+      "@playwright/test": "^1.49.0"
+    },
+    "scripts": {
+      "test:local": "npx playwright test --headed",
+      "test:docker": "npx playwright test --reporter=line"
+    }
+  }
+  

@@ -1,0 +1,9 @@
+services:
+  playwright:
+    build: ./playwright
+    volumes:
+      - ./PlayWright:/tests
+    command: ["npx", "playwright", "test", "--reporter=line"]
+    network_mode: "host"
+    environment:
+      - APP_URL=http://localhost:88
