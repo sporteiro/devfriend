@@ -1,9 +1,10 @@
-import os
 from datetime import datetime, timedelta
+import os
 from typing import Optional
 
 import bcrypt
 import jwt
+
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
 ALGORITHM = "HS256"

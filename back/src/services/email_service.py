@@ -1,12 +1,13 @@
+from datetime import datetime
 import json
 import logging
-from datetime import datetime
 
 from src.models.integration import IntegrationCreate
 from src.models.user import User
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 from src.services.integration_service import IntegrationService
 from src.utils.gmail_client import GmailClient
+
 
 logger = logging.getLogger(__name__)
 

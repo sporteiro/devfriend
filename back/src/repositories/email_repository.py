@@ -2,6 +2,7 @@ import logging
 
 from repositories.postgresql_repository import PostgreSQLRepository
 
+
 logger = logging.getLogger(__name__)
 
 class EmailRepository(PostgreSQLRepository):

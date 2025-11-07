@@ -8,6 +8,7 @@ from src.models.user import UserCreate, UserLogin, UserResponse
 from src.repositories.postgresql_user_repository import PostgreSQLUserRepository
 from src.services.auth_service import AuthService
 
+
 # Load environment variables
 load_dotenv()
 

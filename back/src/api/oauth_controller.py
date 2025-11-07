@@ -11,6 +11,7 @@ from src.models.user import User
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 from src.services.secret_service import SecretService
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -224,7 +225,7 @@ async def google_callback(
                 if host == 'localhost' or host == '127.0.0.1':
                     frontend_url = 'http://localhost:88'
                 else:
-                    frontend_url = f"{scheme}://{host}:88"
+                    frontend_url = f"{scheme}://{host}"
             return RedirectResponse(
                 url=f"{frontend_url}/?oauth_success=true&secret_id={gmail_secret.id}&message=already_authorized"
             )

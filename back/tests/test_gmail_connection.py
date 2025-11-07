@@ -20,13 +20,13 @@ load_dotenv(env_path)
 
 # Load OAuth credentials from environment variables
 TEST_OAUTH_CREDENTIALS = {
-    'client_id': os.getenv('TEST_GOOGLE_CLIENT_ID', ''),
-    'client_secret': os.getenv('TEST_GOOGLE_CLIENT_SECRET', ''),
-    'redirect_uri': os.getenv('TEST_GOOGLE_REDIRECT_URI', 'http://localhost:8888/auth/google/callback')
+    'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
+    'client_secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
+    'redirect_uri': os.getenv('GOOGLE_REDIRECT_URI', 'http://localhost:8888/auth/google/callback')
 }
 
 # Optional: If you have a refresh_token from a previous OAuth flow, you can test full connection
-TEST_REFRESH_TOKEN = os.getenv('TEST_GOOGLE_REFRESH_TOKEN', '')
+TEST_REFRESH_TOKEN = os.getenv('GOOGLE_REFRESH_TOKEN', '')
 
 
 def test_google_oauth_connection():

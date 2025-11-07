@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,6 +17,7 @@ from src.api.integration_controller import router as integration_router
 from src.api.note_controller import router as note_router
 from src.api.oauth_controller import router as oauth_router
 from src.api.secret_controller import router as secret_router
+
 
 app = FastAPI(title="DevFriend API", version="1.0.0")
 

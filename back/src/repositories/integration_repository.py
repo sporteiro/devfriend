@@ -6,6 +6,7 @@ from src.repositories.postgresql_integration_repository import (
     PostgreSQLIntegrationRepository,
 )
 
+
 logger = logging.getLogger(__name__)
 
 class IntegrationRepository(PostgreSQLIntegrationRepository):

@@ -5,6 +5,7 @@ from src.models.user import User
 from src.repositories.integration_repository import IntegrationRepository
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 
+
 logger = logging.getLogger(__name__)
 
 class IntegrationService:

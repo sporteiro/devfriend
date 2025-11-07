@@ -7,6 +7,7 @@ from src.models.user import User
 from src.services.email_service import EmailService
 from src.services.integration_service import IntegrationService
 
+
 router = APIRouter()
 
 @router.get("/email/integrations")
