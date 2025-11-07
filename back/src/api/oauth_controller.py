@@ -320,7 +320,7 @@ async def google_callback(
                 if host == 'localhost' or host == '127.0.0.1':
                     frontend_url = 'http://localhost:88'
                 else:
-                    frontend_url = f"{scheme}://{host}:88"
+                    frontend_url = f"{scheme}://{host}"
 
             logger.info(f"Redirecting to frontend after Gmail OAuth: {frontend_url}")
             return RedirectResponse(
@@ -336,7 +336,7 @@ async def google_callback(
                 if host == 'localhost' or host == '127.0.0.1':
                     frontend_url = 'http://localhost:88'
                 else:
-                    frontend_url = f"{scheme}://{host}:88"
+                    frontend_url = f"{scheme}://{host}"
             return RedirectResponse(
                 url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}&warning=integration_failed"
             )
@@ -349,7 +349,7 @@ async def google_callback(
             if host == 'localhost' or host == '127.0.0.1':
                 frontend_url = 'http://localhost:88'
             else:
-                frontend_url = f"{scheme}://{host}:88"
+                frontend_url = f"{scheme}://{host}"
         return RedirectResponse(
             url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}"
         )
@@ -373,7 +373,7 @@ async def google_login_callback(
             if host == 'localhost' or host == '127.0.0.1':
                 return 'http://localhost:88'
             else:
-                return f"{scheme}://{host}:88"
+                return f"{scheme}://{host}"
         return frontend_url
 
     if error:
