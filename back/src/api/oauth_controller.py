@@ -11,6 +11,7 @@ from src.models.user import User
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 from src.services.secret_service import SecretService
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -35,13 +36,13 @@ def get_redirect_uri(request: Request) -> str:
     scheme = request.url.scheme
     host = request.url.hostname
     port = request.url.port
-    
+
     # If port is 80 or 443, don't include it (standard HTTP/HTTPS)
     if port and port not in [80, 443]:
         base_url = f"{scheme}://{host}:{port}"
     else:
         base_url = f"{scheme}://{host}"
-    
+
     redirect_uri = f"{base_url}/auth/google/callback"
     logger.debug(f"Using redirect URI: {redirect_uri}")
     return redirect_uri
@@ -64,15 +65,15 @@ async def authorize_google_login(request: Request):
     scheme = request.url.scheme
     host = request.url.hostname
     port = request.url.port
-    
+
     if port and port not in [80, 443]:
         base_url = f"{scheme}://{host}:{port}"
     else:
         base_url = f"{scheme}://{host}"
-    
+
     redirect_uri = f"{base_url}/auth/google/login/callback"
     logger.info(f"Using redirect URI for login: {redirect_uri}")
-    
+
     # Build authorization URL for login
     params = {
         'client_id': GOOGLE_CLIENT_ID,
@@ -82,10 +83,10 @@ async def authorize_google_login(request: Request):
         'access_type': 'offline',
         'prompt': 'consent',
     }
-    
+
     auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
     logger.info(f"Generating Google login OAuth URL with redirect_uri: {redirect_uri}")
-    
+
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}  # Also return redirect_uri for debugging
 
 
@@ -106,7 +107,7 @@ async def authorize_google(
         )
 
     redirect_uri = get_redirect_uri(request)
-    
+
     # Build authorization URL
     params = {
         'client_id': GOOGLE_CLIENT_ID,
@@ -117,10 +118,10 @@ async def authorize_google(
         'prompt': 'consent',  # Force consent screen to ensure refresh_token
         'state': str(current_user_id)  # Pass user_id in state
     }
-    
+
     auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
     logger.info(f"Generating OAuth URL for Gmail integration for user {current_user_id} with redirect_uri: {redirect_uri}")
-    
+
     # Return JSON with the URL instead of redirecting
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}  # Also return redirect_uri for debugging
 
@@ -162,18 +163,18 @@ async def google_callback(
     # Always use environment variables (simplified)
     client_id = GOOGLE_CLIENT_ID
     client_secret = GOOGLE_CLIENT_SECRET
-    
+
     if not client_id or not client_secret:
         raise HTTPException(
             status_code=500,
             detail="Google OAuth credentials not configured"
         )
-    
+
     # Exchange code for tokens
     redirect_uri = get_redirect_uri(request)
-    
+
     import httpx
-    
+
     try:
         async with httpx.AsyncClient() as client:
             token_response = await client.post(
@@ -197,7 +198,7 @@ async def google_callback(
 
     access_token = token_data.get('access_token')
     refresh_token = token_data.get('refresh_token')
-    
+
     if not refresh_token:
         logger.warning("No refresh_token received. This may happen if user already authorized.")
         # Try to get existing refresh_token from user's secrets
@@ -213,7 +214,7 @@ async def google_callback(
                         break
                 except:
                     continue
-        
+
         if gmail_secret:
             # Update existing secret with new access_token if needed
             # But we can't update without the refresh_token, so redirect to success
@@ -224,7 +225,7 @@ async def google_callback(
                 if host == 'localhost' or host == '127.0.0.1':
                     frontend_url = 'http://localhost:88'
                 else:
-                    frontend_url = f"{scheme}://{host}:88"
+                    frontend_url = f"{scheme}://{host}"
             return RedirectResponse(
                 url=f"{frontend_url}/?oauth_success=true&secret_id={gmail_secret.id}&message=already_authorized"
             )
@@ -250,7 +251,7 @@ async def google_callback(
 
     secret_repository = PostgreSQLSecretRepository()
     secret_service = SecretService(secret_repository)
-    
+
     # Always create new secret (simplified - no updating existing)
     from src.models.secret import SecretCreate
 
@@ -261,13 +262,13 @@ async def google_callback(
         'refresh_token': refresh_token,
         'redirect_uri': redirect_uri
     }
-    
+
     secret_data = SecretCreate(
         name=f"Gmail - {email}",
         service_type='gmail',
         datos_secrets=credentials_data
     )
-    
+
     try:
         saved_secret = secret_service.create_secret(user_id, secret_data)
         logger.info(f"Saved Gmail credentials for user {user_id}")
@@ -275,25 +276,25 @@ async def google_callback(
     except Exception as e:
         logger.error(f"Error creating secret: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create secret: {str(e)}")
-    
+
     # Automatically create or update the email integration with the saved secret (only if secret was updated)
     if secret_id:
         from src.models.integration import IntegrationUpdate
         from src.services.email_service import EmailService
         from src.services.integration_service import IntegrationService
-        
+
         email_service = EmailService(user_id)
         integration_service = IntegrationService(user_id)
-        
+
         try:
             # Check if user already has a Gmail integration
             existing_integrations = integration_service.get_integrations('gmail')
-            
+
             if existing_integrations and len(existing_integrations) > 0:
                 # Update existing integration with new secret_id
                 existing_integration = existing_integrations[0]
                 integration_id = existing_integration.get('id')
-                
+
                 # Update integration with the secret_id
                 logger.info(f"Updating integration {integration_id} with secret_id {secret_id}")
                 update_data = IntegrationUpdate(secret_id=secret_id)
@@ -308,9 +309,9 @@ async def google_callback(
                 except Exception as create_error:
                     logger.error(f"Error creating integration: {str(create_error)}", exc_info=True)
                     raise
-            
+
             logger.info(f"Gmail integration ready: {integration.get('id')} for user {user_id}")
-            
+
             # Return success page or redirect to frontend
             frontend_url = os.getenv('FRONTEND_URL')
             if not frontend_url:
@@ -320,7 +321,7 @@ async def google_callback(
                     frontend_url = 'http://localhost:88'
                 else:
                     frontend_url = f"{scheme}://{host}:88"
-            
+
             logger.info(f"Redirecting to frontend after Gmail OAuth: {frontend_url}")
             return RedirectResponse(
                 url=f"{frontend_url}/?oauth_success=true&integration_id={integration.get('id')}"
@@ -374,7 +375,7 @@ async def google_login_callback(
             else:
                 return f"{scheme}://{host}:88"
         return frontend_url
-    
+
     if error:
         logger.error(f"Google OAuth error: {error}")
         return RedirectResponse(
@@ -389,17 +390,17 @@ async def google_login_callback(
     # Always use environment variables
     client_id = GOOGLE_CLIENT_ID
     client_secret = GOOGLE_CLIENT_SECRET
-    
+
     if not client_id or not client_secret:
         return RedirectResponse(
             url=f"{get_frontend_url()}/?oauth_error=config_error"
         )
-    
+
     # Exchange code for tokens
     redirect_uri = get_redirect_uri(request).replace('/auth/google/callback', '/auth/google/login/callback')
-    
+
     import httpx
-    
+
     try:
         async with httpx.AsyncClient() as client:
             token_response = await client.post(
@@ -421,7 +422,7 @@ async def google_login_callback(
         )
 
     access_token = token_data.get('access_token')
-    
+
     if not access_token:
         return RedirectResponse(
             url=f"{get_frontend_url()}/?oauth_error=no_access_token"
@@ -456,7 +457,7 @@ async def google_login_callback(
     from src.repositories.postgresql_user_repository import PostgreSQLUserRepository
     from src.services.auth_service import AuthService
     from src.utils.security import create_access_token, hash_password
-    
+
     db_config = {
         "host": os.getenv("DB_HOST", "postgres"),
         "port": int(os.getenv("DB_PORT", "5432")),
@@ -464,13 +465,13 @@ async def google_login_callback(
         "user": os.getenv("DB_USER", "devfriend"),
         "password": os.getenv("DB_PASSWORD", "devfriend"),
     }
-    
+
     user_repository = PostgreSQLUserRepository(**db_config)
     auth_service = AuthService(user_repository)
-    
+
     # Check if user exists
     existing_user = auth_service.get_user_by_email(google_email)
-    
+
     if existing_user:
         # User exists, log them in
         user = existing_user
@@ -482,18 +483,17 @@ async def google_login_callback(
         # Generate a random password hash for OAuth users (they can't login with password)
         random_password = secrets.token_urlsafe(32)
         password_hash = hash_password(random_password)
-        
+
         new_user = User(email=google_email, password_hash=password_hash)
         user = user_repository.save(new_user)
         logger.info(f"Created new user {user.id} via Google OAuth")
-    
+
     # Generate JWT token
     token_data = {"sub": str(user.id), "email": user.email}
     jwt_token = create_access_token(token_data)
-    
+
     # Redirect to frontend with token
     logger.info(f"Redirecting to frontend: {get_frontend_url()}")
     return RedirectResponse(
         url=f"{get_frontend_url()}/?oauth_login_success=true&token={jwt_token}"
     )
-

@@ -6,12 +6,13 @@ from src.repositories.postgresql_integration_repository import (
     PostgreSQLIntegrationRepository,
 )
 
+
 logger = logging.getLogger(__name__)
 
 class IntegrationRepository(PostgreSQLIntegrationRepository):
     def __init__(self):
         super().__init__()
-    
+
     def get_user_integrations(self, user_id: int, service_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get all integrations for a user
@@ -19,14 +20,14 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
         try:
             if service_type:
                 query = """
-                    SELECT * FROM integrations 
+                    SELECT * FROM integrations
                     WHERE user_id = %s AND service_type = %s
                     ORDER BY created_at DESC
                 """
                 result = self.fetch_all(query, user_id, service_type)
             else:
                 query = """
-                    SELECT * FROM integrations 
+                    SELECT * FROM integrations
                     WHERE user_id = %s
                     ORDER BY created_at DESC
                 """
@@ -54,15 +55,15 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
         """
         try:
             print(f"Creating integration with data: {integration_data}")
-            
+
             # INSERT without RETURNING
             query = """
-                INSERT INTO integrations 
+                INSERT INTO integrations
                 (user_id, secret_id, service_type, config, is_active)
                 VALUES (%s, %s, %s, %s, %s)
             """
             config_json = json.dumps(integration_data.get('config')) if integration_data.get('config') else None
-            
+
             self.execute(
                 query,
                 integration_data['user_id'],
@@ -71,12 +72,12 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
                 config_json,
                 integration_data.get('is_active', True)
             )
-            
+
             print("Insert executed, now fetching the last inserted integration")
-            
+
             # Query to get the newly inserted integration
             fetch_query = """
-                SELECT * FROM integrations 
+                SELECT * FROM integrations
                 WHERE user_id = %s AND service_type = %s
                 ORDER BY id DESC LIMIT 1
             """
@@ -85,7 +86,7 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
                 integration_data['user_id'],
                 integration_data['service_type']
             )
-            
+
             print(f"Fetch result: {result}")
             return result
         except Exception as e:
@@ -123,7 +124,7 @@ class IntegrationRepository(PostgreSQLIntegrationRepository):
             params.extend([integration_id, user_id])
 
             query = f"""
-                UPDATE integrations 
+                UPDATE integrations
                 SET {', '.join(set_parts)}
                 WHERE id = %s AND user_id = %s
                 RETURNING *

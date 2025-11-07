@@ -9,4 +9,3 @@
       "test:docker": "npx playwright test --reporter=line"
     }
   }
-  

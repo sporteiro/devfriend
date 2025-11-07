@@ -5,6 +5,7 @@ from src.models.integration import IntegrationCreate, IntegrationUpdate
 from src.models.user import User
 from src.services.integration_service import IntegrationService
 
+
 router = APIRouter()
 
 @router.get("/integrations")

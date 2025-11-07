@@ -7,6 +7,7 @@ from src.models.user import User
 from src.services.email_service import EmailService
 from src.services.integration_service import IntegrationService
 
+
 router = APIRouter()
 
 @router.get("/email/integrations")
@@ -64,7 +65,7 @@ def get_emails(
 ):
     """
     Get emails from an integration
-    
+
     Query examples:
     - is:unread - Get unread emails
     - from:example@gmail.com - Get emails from specific sender

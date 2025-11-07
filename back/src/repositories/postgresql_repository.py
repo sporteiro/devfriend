@@ -56,15 +56,15 @@ class PostgreSQLNoteRepository(NoteRepository):
                 if note.id:
                     # Update existing note
                     cursor.execute(
-                        """UPDATE notes 
-                           SET title = %s, content = %s, is_archived = %s 
+                        """UPDATE notes
+                           SET title = %s, content = %s, is_archived = %s
                            WHERE id = %s RETURNING *""",
                         (note.title, note.content, note.is_archived, note.id),
                     )
                 else:
                     # Insert new note
                     cursor.execute(
-                        """INSERT INTO notes (title, content, user_id, is_archived) 
+                        """INSERT INTO notes (title, content, user_id, is_archived)
                            VALUES (%s, %s, %s, %s) RETURNING *""",
                         (note.title, note.content, note.user_id, note.is_archived),
                     )

@@ -176,27 +176,27 @@ graph LR
     subgraph "Capa de Presentación"
         A[Vue Components]
     end
-    
+
     subgraph "Adaptadores de Entrada"
         B[REST API Controller]
     end
-    
+
     subgraph "Capa de Aplicación"
         C[NoteService<br/>Casos de Uso]
     end
-    
+
     subgraph "Capa de Dominio"
         D[Note Entity<br/>Lógica de Negocio]
     end
-    
+
     subgraph "Puertos"
         E[NoteRepository<br/>Interface]
     end
-    
+
     subgraph "Adaptadores de Salida"
         F[SQLiteNoteRepository<br/>Implementación]
     end
-    
+
     subgraph "Infraestructura"
         G[SQLite Database]
     end
@@ -270,4 +270,3 @@ graph TD
 ---
 
 # Otros diagramas (de clases, de base de datos, etc.) van debajo...
-

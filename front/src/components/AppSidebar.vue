@@ -6,15 +6,15 @@
     </div>
 
     <nav class="menu">
-      <a 
-        href="#" 
+      <a
+        href="#"
         :class="{ active: currentSection === 'notes' }"
         @click="navigateTo('notes')"
       >
         Notes
       </a>
-      <a 
-        href="#" 
+      <a
+        href="#"
         :class="{ active: currentSection === 'emailmodal' }"
         @click="navigateTo('emailmodal')"
         class="nav-item"
@@ -22,15 +22,15 @@
         Email
         <span class="notification-badge">3</span>
       </a>
-      <a 
-        href="#" 
+      <a
+        href="#"
         :class="{ active: currentSection === 'repository' }"
         @click="navigateTo('repository')"
       >
         Repository
       </a>
-      <a 
-        href="#" 
+      <a
+        href="#"
         :class="{ active: currentSection === 'messages' }"
         @click="navigateTo('messages')"
         class="nav-item"
@@ -38,8 +38,8 @@
         Messages
         <span class="notification-badge">12</span>
       </a>
-      <a 
-        href="#" 
+      <a
+        href="#"
         :class="{ active: currentSection === 'credentials' }"
         @click="navigateTo('credentials')"
       >
@@ -87,4 +87,3 @@ export default {
 </script>
 
 <style scoped src="./AppSidebar.css"></style>
-

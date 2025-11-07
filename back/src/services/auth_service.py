@@ -64,4 +64,3 @@ class AuthService:
     def get_user_by_email(self, email: str) -> Optional[User]:
         """Get a user by email."""
         return self.user_repository.find_by_email(email)
-

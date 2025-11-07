@@ -43,11 +43,11 @@ class PostgreSQLIntegrationRepository:
                     )
                 """)
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_integrations_user 
+                    CREATE INDEX IF NOT EXISTS idx_integrations_user
                     ON integrations (user_id)
                 """)
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_integrations_secret 
+                    CREATE INDEX IF NOT EXISTS idx_integrations_secret
                     ON integrations (secret_id)
                 """)
                 conn.commit()

@@ -9,6 +9,7 @@ from src.models.secret import SecretCreate, SecretResponse
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 from src.services.secret_service import SecretService
 
+
 load_dotenv()
 
 router = APIRouter()

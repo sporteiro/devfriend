@@ -9,6 +9,7 @@ from src.models.note import Note
 from src.repositories.postgresql_repository import PostgreSQLNoteRepository
 from src.services.note_service import NoteService
 
+
 # Load environment variables from .env
 load_dotenv()
 

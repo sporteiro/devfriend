@@ -5,6 +5,7 @@ from src.models.user import User
 from src.repositories.integration_repository import IntegrationRepository
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 
+
 logger = logging.getLogger(__name__)
 
 class IntegrationService:
@@ -61,12 +62,12 @@ class IntegrationService:
             # Create the integration
             integration_dict = integration_data.model_dump()
             integration_dict['user_id'] = self.user_id
-            
+
             new_integration = self.integration_repository.create_integration(
                 integration_dict
             )
             return new_integration
-            
+
         except Exception as e:
             logger.error(f"Error creating integration for user {self.user_id}: {str(e)}")
             raise e
@@ -87,7 +88,7 @@ class IntegrationService:
                 integration_id, self.user_id, update_dict
             )
             return updated_integration
-            
+
         except Exception as e:
             logger.error(f"Error updating integration {integration_id}: {str(e)}")
             raise e

@@ -63,4 +63,3 @@ export const authService = {
     return !!this.getToken();
   },
 };
-

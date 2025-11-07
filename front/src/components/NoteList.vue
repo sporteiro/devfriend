@@ -14,16 +14,16 @@
             {{ formatDate(note.created_at) }}
           </small>
           <div class="note-actions">
-            <button 
-              @click="editNote(note)" 
-              class="edit-btn" 
+            <button
+              @click="editNote(note)"
+              class="edit-btn"
               :aria-label="`Edit note: ${note.content.substring(0, 50)}...`"
             >
               Edit
             </button>
-            <button 
-              @click="deleteNote(note)" 
-              class="delete-btn" 
+            <button
+              @click="deleteNote(note)"
+              class="delete-btn"
               :aria-label="`Delete note: ${note.content.substring(0, 50)}...`"
             >
               Delete
@@ -83,4 +83,3 @@ export default {
 </script>
 
 <style scoped src="./NoteList.css"></style>
-

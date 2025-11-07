@@ -5,16 +5,16 @@
         <h2>{{ isLogin ? 'Sign In' : 'Sign Up' }}</h2>
         <button @click="closeModal" class="close-btn">×</button>
       </div>
-      
+
       <div class="auth-tabs">
-        <button 
-          :class="{ active: isLogin }" 
+        <button
+          :class="{ active: isLogin }"
           @click="isLogin = true"
         >
           Sign In
         </button>
-        <button 
-          :class="{ active: !isLogin }" 
+        <button
+          :class="{ active: !isLogin }"
           @click="isLogin = false"
         >
           Sign Up
@@ -24,10 +24,10 @@
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div v-if="!isLogin" class="form-group">
           <label for="name">Full name</label>
-          <input 
+          <input
             v-model="formData.name"
-            type="text" 
-            id="name" 
+            type="text"
+            id="name"
             required
             placeholder="Your full name"
           />
@@ -35,10 +35,10 @@
 
         <div class="form-group">
           <label for="email">Email</label>
-          <input 
+          <input
             v-model="formData.email"
-            type="email" 
-            id="email" 
+            type="email"
+            id="email"
             required
             placeholder="your@email.com"
           />
@@ -46,10 +46,10 @@
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input 
+          <input
             v-model="formData.password"
-            type="password" 
-            id="password" 
+            type="password"
+            id="password"
             required
             placeholder="Minimum 6 characters"
           />
@@ -111,7 +111,7 @@ export default {
     async handleSubmit() {
       this.loading = true;
       this.error = null;
-      
+
       try {
         if (this.isLogin) {
           await this.login();
@@ -156,10 +156,10 @@ export default {
       try {
         const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
         const axios = (await import('axios')).default;
-        
+
         const response = await axios.get(`${API_URL}/auth/google/login`);
         const authUrl = response.data?.auth_url;
-        
+
         if (authUrl) {
           // Redirect to Google OAuth
           window.location.href = authUrl;

@@ -5,6 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.utils.security import decode_access_token
 
+
 security = HTTPBearer()
 
 
@@ -71,4 +72,3 @@ def get_optional_user_id(
         return int(user_id_str)
     except ValueError:
         return None
-

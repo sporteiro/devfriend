@@ -14,22 +14,22 @@ export const emailService = {
    * @returns {Promise<Array>}
    */
   async getIntegrations() {
-    const response = await axios.get(`${API_URL}/email/integrations`, { 
-      headers: getAuthHeaders() 
+    const response = await axios.get(`${API_URL}/email/integrations`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   },
 
   /**
    * Crear una nueva integración de email
-   * @param {Object} integrationData 
+   * @param {Object} integrationData
    * @param {string} integrationData.provider
    * @param {number} integrationData.credential_id
    * @returns {Promise<Object>}
    */
   async createIntegration(integrationData) {
-    const response = await axios.post(`${API_URL}/email/integrations`, integrationData, { 
-      headers: getAuthHeaders() 
+    const response = await axios.post(`${API_URL}/email/integrations`, integrationData, {
+      headers: getAuthHeaders()
     });
     return response.data;
   },
@@ -67,7 +67,7 @@ export const emailService = {
    */
   async syncEmails(integrationId) {
     const response = await axios.post(
-      `${API_URL}/email/integrations/${integrationId}/sync`, 
+      `${API_URL}/email/integrations/${integrationId}/sync`,
       {},
       { headers: getAuthHeaders() }
     );

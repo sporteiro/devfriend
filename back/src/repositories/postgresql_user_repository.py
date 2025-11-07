@@ -125,4 +125,3 @@ class PostgreSQLUserRepository(UserRepository):
                 return cursor.rowcount > 0
         finally:
             conn.close()
-

@@ -1,8 +1,8 @@
 <template>
   <div :class="['app-container', { dark: isDarkMode }]">
     <!-- Botón móvil para abrir/cerrar sidebar -->
-    <button 
-      class="menu-toggle" 
+    <button
+      class="menu-toggle"
       @click="sidebarOpen = !sidebarOpen"
       :aria-label="sidebarOpen ? 'Close menu' : 'Open menu'"
       aria-expanded="sidebarOpen"
@@ -30,16 +30,16 @@
         <h1 v-else-if="currentSection === 'repository'">Repository</h1>
         <h1 v-else-if="currentSection === 'messages'">Messages</h1>
         <h1 v-else-if="currentSection === 'credentials'">Credentials</h1>
-        
-        <button 
+
+        <button
           @click="toggleDarkMode(!isDarkMode)"
           class="dark-mode-toggle"
           :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
           :title="isDarkMode ? 'Light mode' : 'Dark mode'"
         >
-          <img 
-            src="@/assets/darkmode.png" 
-            alt="Toggle dark mode" 
+          <img
+            src="@/assets/darkmode.png"
+            alt="Toggle dark mode"
             class="darkmode-icon"
           />
         </button>
@@ -47,23 +47,23 @@
 
       <!-- Sección Notes -->
       <div v-if="currentSection === 'notes'">
-        
+
         <div class="search-container">
           <label for="search-input" class="sr-only">Search in notes</label>
-          <input 
+          <input
             id="search-input"
             v-model="searchTerm"
-            type="text" 
-            placeholder="Search in notes..." 
+            type="text"
+            placeholder="Search in notes..."
             class="search-input"
             aria-describedby="search-results"
           />
           <span v-if="searchTerm" id="search-results" class="search-results" role="status" aria-live="polite">
             {{ filteredNotes.length }} result(s) found
           </span>
-          <button 
-            @click="exportNotes" 
-            class="export-btn" 
+          <button
+            @click="exportNotes"
+            class="export-btn"
             title="Export notes"
             aria-label="Export all notes to JSON file"
           >
@@ -83,17 +83,17 @@
             Import
           </button>
         </div>
-        
-        <NoteForm 
+
+        <NoteForm
           :editingNote="editingNote"
-          @submit="createNote" 
+          @submit="createNote"
           @update-note="updateNote"
           @cancel-edit="cancelEdit"
         />
-        
-        <NoteList 
-          :notes="filteredNotes" 
-          :loading="loading" 
+
+        <NoteList
+          :notes="filteredNotes"
+          :loading="loading"
           :error="error"
           @edit-note="editNote"
           @delete-note="deleteNote"
@@ -169,7 +169,7 @@
     </main>
 
     <!-- Modal de autenticación -->
-    <AuthModal 
+    <AuthModal
       :show="showAuthModal"
       @close="hideAuthModal"
       @success="onAuthSuccess"
@@ -189,7 +189,7 @@ import "./App.css";
 
 export default {
   name: "App",
-  components: { 
+  components: {
     AppSidebar,
     NoteForm,
     NoteList,
@@ -373,10 +373,10 @@ export default {
       try {
         const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
         const axios = (await import('axios')).default;
-        
+
         const response = await axios.get(`${API_URL}/auth/google/login`);
         const authUrl = response.data?.auth_url;
-        
+
         if (authUrl) {
           window.location.href = authUrl;
         } else {
@@ -393,17 +393,17 @@ export default {
       const oauthLoginSuccess = urlParams.get('oauth_login_success');
       const oauthSuccess = urlParams.get('oauth_success');
       const token = urlParams.get('token');
-      
+
       // Handle Google login OAuth callback
       if (oauthLoginSuccess === 'true' && token) {
         // Save token first
         localStorage.setItem('devfriend_token', token);
-        
+
         // Get user info using authService (same way as native login)
         try {
           const { authService } = await import('./services/authService');
           const user = await authService.getCurrentUser();
-          
+
           if (user) {
             localStorage.setItem(
               'devfriend_user',
@@ -418,12 +418,12 @@ export default {
               email: user.email,
               loginTime: new Date().toISOString(),
             };
-            
+
             // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            
+
             this.$toast.success('Logged in with Google successfully!');
-            
+
             // Reload everything to update state
             await this.checkAuth();
             await this.loadNotes();
@@ -437,11 +437,11 @@ export default {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
-      
+
       // Handle Gmail OAuth callback (integration successful)
       if (oauthSuccess === 'true') {
         this.$toast.success('Gmail integration connected successfully!');
-        
+
         // Reload email integrations if we're on that section
         if (this.currentSection === 'emailmodal') {
           // Trigger reload in EmailModal component
@@ -452,11 +452,11 @@ export default {
             }
           });
         }
-        
+
         // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
-      
+
       // Handle OAuth error
       const oauthError = urlParams.get('oauth_error');
       if (oauthError) {
@@ -471,11 +471,10 @@ export default {
         return this.notes;
       }
       const term = this.searchTerm.toLowerCase();
-      return this.notes.filter(note => 
+      return this.notes.filter(note =>
         note.content.toLowerCase().includes(term)
       );
     },
   },
 };
 </script>
-

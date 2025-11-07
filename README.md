@@ -1,10 +1,10 @@
 <div align="center">
   <img src="front/src/assets/logo.png" alt="DevFriend Logo" width="200"/>
-  
+
   # DevFriend
-  
+
   **Task management and resources access for software developers**
-  
+
   A modern web application for managing notes and developer resources, built with clean architecture principles.
 
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.113+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -161,20 +161,20 @@ graph TB
    ```
 
 2. **Configure environment variables**
-   
+
    Copy the example file (it already contains a working encryption key):
    ```bash
    cd back
    cp .env.example .env
    ```
-   
+
    The `.env.example` file contains all required variables with working values for local development.
 
 3. **Start the application**
    ```bash
    docker compose up --build
    ```
-   
+
    The database schema will be automatically initialized from `db_schema.sql` when PostgreSQL starts for the first time.
 
 4. **Access the application**
@@ -353,6 +353,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
   Made with ❤️ for developers by developers
-  
+
   **[Report Bug](https://github.com/yourusername/devfriend/issues)** · **[Request Feature](https://github.com/yourusername/devfriend/issues)**
 </div>

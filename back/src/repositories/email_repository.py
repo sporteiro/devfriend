@@ -2,19 +2,20 @@ import logging
 
 from repositories.postgresql_repository import PostgreSQLRepository
 
+
 logger = logging.getLogger(__name__)
 
 class EmailRepository(PostgreSQLRepository):
     def __init__(self):
         super().__init__()
-    
+
     async def get_user_integrations(self, user_id: int):
         """
         Get all email integrations for a user
         """
         try:
             query = """
-                SELECT * FROM email_integrations 
+                SELECT * FROM email_integrations
                 WHERE user_id = $1
                 ORDER BY created_at DESC
             """
@@ -42,7 +43,7 @@ class EmailRepository(PostgreSQLRepository):
         """
         try:
             query = """
-                INSERT INTO email_integrations 
+                INSERT INTO email_integrations
                 (user_id, provider, credential_id, email_address, status)
                 VALUES ($1, $2, $3, $4, $5)
                 RETURNING *
