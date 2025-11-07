@@ -72,4 +72,3 @@ def get_optional_user_id(
         return int(user_id_str)
     except ValueError:
         return None
-

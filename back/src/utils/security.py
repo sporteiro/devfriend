@@ -56,4 +56,3 @@ def decode_access_token(token: str) -> Optional[dict]:
         return None
     except jwt.JWTError:
         return None
-

@@ -75,4 +75,3 @@ async def get_current_user(user_id: int = Depends(get_current_user_id)):
         created_at=user.created_at,
         is_active=user.is_active,
     )
-

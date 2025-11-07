@@ -65,7 +65,7 @@ def get_emails(
 ):
     """
     Get emails from an integration
-    
+
     Query examples:
     - is:unread - Get unread emails
     - from:example@gmail.com - Get emails from specific sender

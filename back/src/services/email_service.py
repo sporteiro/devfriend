@@ -30,13 +30,13 @@ class EmailService:
             logger.debug("Calling integration_service.get_integrations...")
             integrations = self.integration_service.get_integrations('gmail')
             logger.debug(f"Found {len(integrations)} integrations")
-            
+
             # Map integration data to include email_address and status from config
             mapped_integrations = []
             for integration in integrations:
                 mapped = dict(integration)
                 config = integration.get('config', {})
-                
+
                 # Handle config if it's a string (JSON)
                 if isinstance(config, str):
                     try:
@@ -45,21 +45,21 @@ class EmailService:
                         config = {}
                 elif config is None:
                     config = {}
-                
+
                 logger.debug(f"Integration {integration.get('id')} config: {config}")
-                
+
                 # Extract fields from config to top level for frontend compatibility
                 mapped['email_address'] = config.get('email_address', 'unknown@gmail.com')
                 mapped['status'] = config.get('status', 'unknown')
                 mapped['provider'] = 'gmail'
-                
+
                 # Also extract last_sync if available
                 if 'last_sync' in config:
                     mapped['last_sync'] = config.get('last_sync')
-                
+
                 logger.debug(f"Mapped integration {mapped.get('id')}: email_address={mapped.get('email_address')}, status={mapped.get('status')}")
                 mapped_integrations.append(mapped)
-            
+
             logger.info(f"Returning {len(mapped_integrations)} mapped integrations")
             return mapped_integrations
         except Exception as e:
@@ -74,7 +74,7 @@ class EmailService:
             # Verify that the credential exists and belongs to the user
             credential_id = integration_data.get('credential_id')
             logger.info(f"Creating email integration for user {self.user_id} with credential_id {credential_id}")
-            
+
             if credential_id:
                 credential = self.secret_repository.find_by_id(credential_id)
                 if not credential:
@@ -88,7 +88,7 @@ class EmailService:
                 try:
                     credentials_data = json.loads(credential.encrypted_value)
                     logger.debug(f"Credentials parsed for credential {credential_id}, has refresh_token: {'refresh_token' in credentials_data}")
-                    
+
                     gmail_client = GmailClient(credentials_data)
                     profile = gmail_client.get_profile()
                     email_address = profile.get('email_address', 'unknown@gmail.com')
@@ -112,12 +112,12 @@ class EmailService:
                     'status': status
                 }
             )
-            
+
             logger.info(f"Calling integration_service.create_integration for user {self.user_id}")
             new_integration = self.integration_service.create_integration(integration_create)
             logger.info(f"Successfully created integration {new_integration.get('id')} for user {self.user_id}")
             return new_integration
-            
+
         except Exception as e:
             logger.error(f"Error creating email integration for user {self.user_id}: {str(e)}", exc_info=True)
             raise e
@@ -125,10 +125,10 @@ class EmailService:
     def _get_gmail_client(self, integration_id: int) -> GmailClient:
         """
         Get Gmail client for an integration.
-        
+
         Args:
             integration_id: Integration ID
-        
+
         Returns:
             GmailClient instance
         """
@@ -138,7 +138,7 @@ class EmailService:
             raise Exception("Email integration not found")
 
         logger.debug(f"Integration {integration_id} data: {integration}")
-        
+
         # Get secret
         secret_id = integration.get('secret_id')
         logger.debug(f"Raw secret_id from integration: {secret_id} (type: {type(secret_id)})")
@@ -147,7 +147,7 @@ class EmailService:
             raise Exception("No credentials configured for this integration. Please reconnect your Gmail account.")
 
         logger.debug(f"Looking for secret_id {secret_id} (type: {type(secret_id)}) for user {self.user_id}")
-        
+
         # Ensure secret_id is an integer
         if secret_id is not None:
             try:
@@ -155,28 +155,28 @@ class EmailService:
             except (ValueError, TypeError):
                 logger.error(f"Invalid secret_id type: {type(secret_id)}, value: {secret_id}")
                 raise Exception(f"Invalid secret_id format: {secret_id}")
-        
+
         secret = self.secret_repository.find_by_id(secret_id)
         if not secret:
             logger.warning(f"Secret {secret_id} not found in database. Integration may be orphaned. Looking for valid Gmail secret...")
             # List all secrets for this user to find a valid Gmail secret
             all_secrets = self.secret_repository.find_by_user(self.user_id)
             gmail_secrets = [s for s in all_secrets if 'gmail' in s.service_type.lower() or 'email' in s.service_type.lower()]
-            
+
             if gmail_secrets and len(gmail_secrets) > 0:
                 # Use the most recent Gmail secret
                 valid_secret_id = gmail_secrets[0].id
                 logger.info(f"Found valid Gmail secret {valid_secret_id}. Updating integration {integration_id} to use it.")
-                
+
                 # Update integration with valid secret_id
                 from src.models.integration import IntegrationUpdate
                 update_data = IntegrationUpdate(secret_id=valid_secret_id)
                 updated_integration = self.integration_service.update_integration(integration_id, update_data)
-                
+
                 # Refresh integration data to get updated secret_id
                 integration = self.integration_service.get_integration(integration_id)
                 logger.info(f"Updated integration {integration_id} to use secret_id {valid_secret_id}")
-                
+
                 # Get the full secret with decrypted value (find_by_user returns masked values)
                 secret = self.secret_repository.find_by_id(valid_secret_id)
                 if not secret:
@@ -195,11 +195,11 @@ class EmailService:
         try:
             encrypted_value = secret.encrypted_value
             logger.debug(f"Secret {secret.id} encrypted_value type: {type(encrypted_value)}, length: {len(str(encrypted_value)) if encrypted_value else 0}")
-            
+
             if not encrypted_value:
                 logger.error(f"Secret {secret.id} has empty encrypted_value")
                 raise Exception("Secret encrypted_value is empty. The credential may be corrupted.")
-            
+
             # Try to parse as JSON
             if isinstance(encrypted_value, str):
                 logger.debug(f"Parsing JSON string for secret {secret.id} (length: {len(encrypted_value)})")
@@ -212,7 +212,7 @@ class EmailService:
             else:
                 logger.error(f"Invalid encrypted_value type for secret {secret.id}: {type(encrypted_value)}")
                 raise Exception(f"Invalid encrypted_value type: {type(encrypted_value)}")
-            
+
             logger.debug(f"Successfully parsed credentials for secret {secret.id}, keys: {list(credentials_data.keys())}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse credentials JSON for secret {secret.id}: {str(e)}")
@@ -221,11 +221,11 @@ class EmailService:
         except Exception as e:
             logger.error(f"Error processing credentials for secret {secret.id}: {str(e)}", exc_info=True)
             raise
-        
+
         # Validate required fields
         if 'refresh_token' not in credentials_data:
             logger.error(f"Secret {secret.id} is missing refresh_token. Available keys: {list(credentials_data.keys())}")
-            
+
             # Check if we have client_id and client_secret to initiate OAuth
             if 'client_id' in credentials_data and 'client_secret' in credentials_data:
                 raise Exception(
@@ -237,7 +237,7 @@ class EmailService:
                     "Missing refresh_token and OAuth credentials (client_id, client_secret). "
                     "Please add Gmail credentials first."
                 )
-        
+
         required_fields = ['client_id', 'client_secret', 'refresh_token']
         for field in required_fields:
             if field not in credentials_data:
@@ -249,12 +249,12 @@ class EmailService:
     def get_emails(self, integration_id: int, max_results: int = 50, query: str = None):
         """
         Get emails from a Gmail integration
-        
+
         Args:
             integration_id: Integration ID
             max_results: Maximum number of emails to return (default: 50)
             query: Optional Gmail search query (e.g., 'is:unread', 'from:example@gmail.com')
-        
+
         Returns:
             List of email messages
         """
@@ -277,11 +277,11 @@ class EmailService:
 
             logger.info(f"Retrieved {len(email_list)} emails for integration {integration_id}")
             return email_list
-            
+
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Error getting emails for integration {integration_id}: {error_msg}")
-            
+
             # Check if error is about Gmail API not enabled
             if 'Gmail API has not been used' in error_msg or 'it is disabled' in error_msg or 'accessNotConfigured' in error_msg:
                 raise Exception(
@@ -317,20 +317,20 @@ class EmailService:
                     config = json.loads(config)
                 if not isinstance(config, dict):
                     config = {}
-                
+
                 config['last_sync'] = datetime.utcnow().isoformat()
                 config['status'] = 'connected'
-                
+
                 from src.models.integration import IntegrationUpdate
                 update_data = IntegrationUpdate(config=config)
                 self.integration_service.update_integration(integration_id, update_data)
 
             return {"message": "Email sync completed successfully"}
-            
+
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Error syncing emails for integration {integration_id}: {error_msg}")
-            
+
             # Update integration status to error only if it's not a credentials issue
             # (credentials errors should be handled by the user reconnecting)
             if "credentials" not in error_msg.lower() and "not found" not in error_msg.lower():
@@ -343,7 +343,7 @@ class EmailService:
                             config = json.loads(config)
                         if not isinstance(config, dict):
                             config = {}
-                        
+
                         config['status'] = 'error'
                         from src.models.integration import IntegrationUpdate
                         update_data = IntegrationUpdate(config=config)
@@ -355,7 +355,7 @@ class EmailService:
     def get_email_stats(self, integration_id: int):
         """
         Get email statistics from Gmail API
-        
+
         Returns:
             Dictionary with email statistics
         """
@@ -365,12 +365,12 @@ class EmailService:
 
             # Get profile for total counts
             profile = gmail_client.get_profile()
-            
+
             # Get unread count estimate (Gmail API requires pagination for exact count)
             # We'll get a sample to see if there are unread emails
             unread_messages = gmail_client.get_messages(max_results=1, query='is:unread')
             has_unread = len(unread_messages) > 0
-            
+
             # Get integration for last_sync
             integration = self.integration_service.get_integration(integration_id)
             config = integration.get('config', {}) if integration else {}
@@ -387,7 +387,7 @@ class EmailService:
                 'last_sync': last_sync,
                 'email_address': profile.get('email_address', '')
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting email stats for integration {integration_id}: {str(e)}")
             raise e

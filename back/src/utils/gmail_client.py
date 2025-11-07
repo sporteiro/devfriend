@@ -23,7 +23,7 @@ class GmailClient:
     def __init__(self, credentials_data: Dict[str, Any]):
         """
         Initialize Gmail client with credentials.
-        
+
         Args:
             credentials_data: Dictionary containing:
                 - client_id: Google OAuth client ID
@@ -64,11 +64,11 @@ class GmailClient:
     def get_messages(self, max_results: int = 10, query: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get list of email messages.
-        
+
         Args:
             max_results: Maximum number of messages to return (default: 10)
             query: Gmail search query (e.g., 'is:unread', 'from:example@gmail.com')
-        
+
         Returns:
             List of message dictionaries with id, threadId, and snippet
         """
@@ -97,10 +97,10 @@ class GmailClient:
     def get_message_details(self, message_id: str) -> Dict[str, Any]:
         """
         Get detailed information about a specific message.
-        
+
         Args:
             message_id: Gmail message ID
-        
+
         Returns:
             Dictionary with message details including headers, body, etc.
         """
@@ -126,10 +126,10 @@ class GmailClient:
     def _parse_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parse Gmail message format into our application format.
-        
+
         Args:
             message: Raw Gmail API message object
-        
+
         Returns:
             Parsed message dictionary
         """
@@ -138,19 +138,19 @@ class GmailClient:
 
         # Extract headers
         headers_dict = {h['name']: h['value'] for h in headers}
-        
+
         # Get subject
         subject = headers_dict.get('Subject', '')
-        
+
         # Get sender
         sender = headers_dict.get('From', '')
-        
+
         # Get date
         date = headers_dict.get('Date', '')
-        
+
         # Get body
         body = self._extract_body(payload)
-        
+
         # Get labels (to determine if read)
         labels = message.get('labelIds', [])
         is_read = 'UNREAD' not in labels
@@ -169,15 +169,15 @@ class GmailClient:
     def _extract_body(self, payload: Dict[str, Any]) -> str:
         """
         Extract text body from message payload.
-        
+
         Args:
             payload: Message payload from Gmail API
-        
+
         Returns:
             Plain text body
         """
         body = ''
-        
+
         if 'parts' in payload:
             # Multipart message
             for part in payload['parts']:
@@ -198,7 +198,7 @@ class GmailClient:
     def get_profile(self) -> Dict[str, Any]:
         """
         Get Gmail user profile information.
-        
+
         Returns:
             Dictionary with email address and other profile info
         """
@@ -219,4 +219,3 @@ class GmailClient:
         except Exception as e:
             logger.error(f"Error getting profile: {str(e)}")
             raise
-

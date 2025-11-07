@@ -14,16 +14,16 @@
       💡 <strong>Markdown Support:</strong> Use # for titles, **bold**, *italic*, `code`, [links](url), lists with -, and more.
     </div>
     <div class="form-actions">
-      <button 
-        @click="handleSubmit" 
+      <button
+        @click="handleSubmit"
         :disabled="!content.trim()"
         :aria-label="editingNote ? 'Update note' : 'Save new note'"
       >
         {{ editingNote ? 'Update' : 'Save' }}
       </button>
-      <button 
-        v-if="editingNote" 
-        @click="cancelEdit" 
+      <button
+        v-if="editingNote"
+        @click="cancelEdit"
         class="cancel-btn"
         aria-label="Cancel note editing"
       >
@@ -85,4 +85,3 @@ export default {
 </script>
 
 <style scoped src="./NoteForm.css"></style>
-

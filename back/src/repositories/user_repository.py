@@ -34,4 +34,3 @@ class UserRepository(ABC):
     def delete(self, user_id: int) -> bool:
         """Delete a user."""
         pass
-

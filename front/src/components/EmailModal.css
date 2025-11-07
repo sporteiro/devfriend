@@ -338,25 +338,25 @@
     padding: 20px;
     margin: 20px;
   }
-  
+
   .integration-details {
     gap: 8px;
   }
-  
+
   .detail-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
   }
-  
+
   .label {
     min-width: auto;
   }
-  
+
   .integration-actions {
     flex-direction: column;
   }
-  
+
   .action-btn {
     width: 100%;
   }
