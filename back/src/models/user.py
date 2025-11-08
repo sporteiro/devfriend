@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class User(BaseModel):
@@ -9,6 +9,7 @@ class User(BaseModel):
     User domain entity (hexagonal core).
     Represents a system user with their basic data.
     """
+    model_config = ConfigDict(from_attributes=True)
 
     id: Optional[int] = None
     email: EmailStr
@@ -16,9 +17,6 @@ class User(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_active: bool = True
-
-    class Config:
-        from_attributes = True
 
 
 class UserCreate(BaseModel):
@@ -36,12 +34,9 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """DTO for user response (without password)."""
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     email: EmailStr
     created_at: datetime
     is_active: bool
-
-    class Config:
-        from_attributes = True

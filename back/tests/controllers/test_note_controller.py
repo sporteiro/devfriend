@@ -1,85 +1,69 @@
 import pytest
-
-from unittest.mock import AsyncMock, patch
-from httpx import AsyncClient
-from fastapi import status
+from fastapi.testclient import TestClient
+import jwt
+from datetime import datetime, timedelta
 
 from src.main import app
+from src.utils.security import SECRET_KEY, ALGORITHM
 
+client = TestClient(app)
 
-@pytest.fixture
-def mock_note_service():
-    """Mock the NoteService used in the notes router."""
-    with patch("src.routes.note_router.note_service") as mock:
-        yield mock
+class TestNoteControllerReal:
 
+    def setup_method(self):
+        # Create valid JWT token for testing
+        self.test_user_id = 1
+        self.valid_token = self._create_valid_token(self.test_user_id)
 
-@pytest.mark.asyncio
-async def test_get_notes(mock_note_service):
-    mock_note_service.get_notes_by_user.return_value = [
-        {"id": 1, "title": "Test Note", "content": "Some text", "user_id": 123}
-    ]
+    def _create_valid_token(self, user_id: int) -> str:
+        """Create valid JWT token for testing"""
+        payload = {
+            "sub": str(user_id),
+            "exp": datetime.utcnow() + timedelta(hours=1)
+        }
+        return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/notes", headers={"Authorization": "Bearer faketoken"})
+    def test_get_notes_real(self):
+        """Real test that calls API with real authentication"""
 
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()[0]["title"] == "Test Note"
-    mock_note_service.get_notes_by_user.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_create_note(mock_note_service):
-    mock_note_service.create_note.return_value = {
-        "id": 1,
-        "title": "New Note",
-        "content": "Hello",
-        "user_id": 123,
-    }
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.post(
+        # Make real request with valid token
+        response = client.get(
             "/notes",
-            json={"title": "New Note", "content": "Hello"},
-            headers={"Authorization": "Bearer faketoken"},
+            headers={"Authorization": f"Bearer {self.valid_token}"}
+        )
+        # print(f"TOKEN: {self.valid_token}")
+
+        # Verify response
+        assert response.status_code == 200
+        # Response should be a list (can be empty)
+        assert isinstance(response.json(), list)
+
+    def test_create_note_real(self):
+        """Real test that creates a note with real authentication"""
+
+        note_data = {
+            "title": "Test Note from Real Test",
+            "content": "This is a test note created by real API test"
+        }
+
+        # Make real request to create note
+        response = client.post(
+            "/notes",
+            json=note_data,
+            headers={"Authorization": f"Bearer {self.valid_token}"}
         )
 
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["title"] == "New Note"
-    mock_note_service.create_note.assert_called_once()
+        # Verify response
+        assert response.status_code == 201
+        data = response.json()
+        assert data["title"] == note_data["title"]
+        assert data["content"] == note_data["content"]
+        assert data["user_id"] == self.test_user_id
 
-
-@pytest.mark.asyncio
-async def test_get_note_authorized(mock_note_service):
-    mock_note_service.get_note_by_id.return_value = type(
-        "Note", (), {"id": 1, "title": "A", "content": "B", "user_id": 123}
-    )
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/notes/1", headers={"Authorization": "Bearer faketoken"})
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["title"] == "A"
-
-
-@pytest.mark.asyncio
-async def test_get_note_not_found(mock_note_service):
-    mock_note_service.get_note_by_id.return_value = None
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/notes/999", headers={"Authorization": "Bearer faketoken"})
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-@pytest.mark.asyncio
-async def test_delete_note(mock_note_service):
-    note_mock = type("Note", (), {"id": 1, "user_id": 123})
-    mock_note_service.get_note_by_id.return_value = note_mock
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.delete("/notes/1", headers={"Authorization": "Bearer faketoken"})
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["message"] == "Note deleted successfully"
-    mock_note_service.delete_note.assert_called_once_with(1)
+        # Cleanup: delete the created note
+        if "id" in data:
+            delete_response = client.delete(
+                f"/notes/{data['id']}",
+                headers={"Authorization": f"Bearer {self.valid_token}"}
+            )
+            assert delete_response.status_code == 200

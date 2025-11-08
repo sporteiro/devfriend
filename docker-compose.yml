@@ -39,6 +39,7 @@ services:
     # auto-reload and hot reload:
     volumes:
       - ./back/src:/app/src
+      - ./back/tests:/app/tests
     command: uvicorn src.main:app --host 0.0.0.0 --port 8888 --reload --log-level debug
 
   front:

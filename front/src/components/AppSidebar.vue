@@ -6,46 +6,46 @@
     </div>
 
     <nav class="menu">
-      <a
-        href="#"
-        :class="{ active: currentSection === 'notes' }"
-        @click="navigateTo('notes')"
-      >
-        Notes
-      </a>
-      <a
-        href="#"
-        :class="{ active: currentSection === 'emailmodal' }"
-        @click="navigateTo('emailmodal')"
-        class="nav-item"
-      >
-        Email
-        <span class="notification-badge">3</span>
-      </a>
-      <a
-        href="#"
-        :class="{ active: currentSection === 'repository' }"
-        @click="navigateTo('repository')"
-      >
-        Repository
-      </a>
-      <a
-        href="#"
-        :class="{ active: currentSection === 'messages' }"
-        @click="navigateTo('messages')"
-        class="nav-item"
-      >
-        Messages
-        <span class="notification-badge">12</span>
-      </a>
-      <a
-        href="#"
-        :class="{ active: currentSection === 'credentials' }"
-        @click="navigateTo('credentials')"
-      >
-        Credentials
-      </a>
-    </nav>
+    <a
+      href="#"
+      :class="{ active: currentSection === 'notes' }"
+      @click="navigateTo('notes')"
+    >
+      Notes
+    </a>
+    <a
+      href="#"
+      :class="{ active: currentSection === 'emailmodal' }"
+      @click="navigateTo('emailmodal')"
+      class="nav-item"
+    >
+      Email
+      <span class="notification-badge">3</span>
+    </a>
+    <a
+      href="#"
+      :class="{ active: currentSection === 'repositorymodal' }"
+      @click="navigateTo('repositorymodal')"
+    >
+      Repository
+    </a>
+    <a
+      href="#"
+      :class="{ active: currentSection === 'messagesmodal' }"
+      @click="navigateTo('messagesmodal')"
+      class="nav-item"
+    >
+      Messages
+      <span class="notification-badge">12</span>
+    </a>
+    <a
+      href="#"
+      :class="{ active: currentSection === 'credentials' }"
+      @click="navigateTo('credentials')"
+    >
+      Credentials
+    </a>
+  </nav>
 
     <div class="user-section" v-if="user">
       <div class="user-info">

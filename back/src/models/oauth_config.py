@@ -1,9 +1,11 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class OAuthConfigBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     integration_id: int
     client_id: str
     client_secret: str
