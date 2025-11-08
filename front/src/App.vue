@@ -27,8 +27,8 @@
       <div class="content-header">
         <h1 v-if="currentSection === 'notes'">Notes</h1>
         <h1 v-else-if="currentSection === 'emailmodal'">Email</h1>
-        <h1 v-else-if="currentSection === 'repository'">Repository</h1>
-        <h1 v-else-if="currentSection === 'messages'">Messages</h1>
+        <h1 v-else-if="currentSection === 'repositorymodal'">Repository</h1>
+        <h1 v-else-if="currentSection === 'messagesmodal'">Messages</h1>
         <h1 v-else-if="currentSection === 'credentials'">Credentials</h1>
 
         <button
@@ -102,26 +102,6 @@
         />
       </div>
 
-      <!-- Sección Email -->
-      <!--
-      <div v-else-if="currentSection === 'email'">
-        <div class="section-placeholder">
-          <p>Gmail Integration</p>
-          <div class="mock-content">
-            <div class="mock-item notification-item">
-              <span class="notification-count">3</span>
-              <span>unread emails</span>
-            </div>
-            <div class="mock-item">
-              <span>Latest: Meeting tomorrow 10:00</span>
-            </div>
-            <div class="mock-item">
-              <span>New: Delivery reminder</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      -->
 
       <div v-else-if="currentSection === 'emailmodal'">
         <EmailModal />
@@ -129,37 +109,13 @@
 
 
       <!-- Sección Repository -->
-      <div v-else-if="currentSection === 'repository'">
-        <div class="section-placeholder">
-          <p>GitHub Integration</p>
-          <div class="mock-content">
-            <div class="mock-item">
-              <span>5 active repositories</span>
-            </div>
-            <div class="mock-item">
-              <span>Last push: 2 hours ago</span>
-            </div>
-          </div>
-        </div>
+      <div v-else-if="currentSection === 'repositorymodal'">
+        <RepositoryModal @navigate="navigateToSection" />
       </div>
 
       <!-- Sección Messages -->
-      <div v-else-if="currentSection === 'messages'">
-        <div class="section-placeholder">
-          <p>Slack Integration</p>
-          <div class="mock-content">
-            <div class="mock-item notification-item">
-              <span class="notification-count">12</span>
-              <span>unread messages</span>
-            </div>
-            <div class="mock-item">
-              <span>Channel: #development (5 new)</span>
-            </div>
-            <div class="mock-item">
-              <span>Channel: #general (7 new)</span>
-            </div>
-          </div>
-        </div>
+      <div v-else-if="currentSection === 'messagesmodal'">
+        <MessagesModal @navigate="navigateToSection" />
       </div>
 
       <!-- Sección Credentials -->
@@ -184,6 +140,8 @@ import NoteList from "./components/NoteList.vue";
 import AuthModal from "./components/AuthModal.vue";
 import CredentialsList from "./components/CredentialsList.vue";
 import EmailModal from "./components/EmailModal.vue";
+import RepositoryModal from "./components/RepositoryModal.vue";
+import MessagesModal from "./components/MessagesModal.vue";
 import { noteService } from "./services/noteService.js";
 import "./App.css";
 
@@ -196,6 +154,8 @@ export default {
     AuthModal,
     CredentialsList,
     EmailModal,
+    RepositoryModal,
+    MessagesModal,
   },
   data() {
     return {

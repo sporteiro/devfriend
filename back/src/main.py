@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth_controller import router as auth_router
 from src.api.email_controller import router as email_router
+from src.api.github_controller import router as github_router
 from src.api.integration_controller import router as integration_router
 from src.api.note_controller import router as note_router
 from src.api.oauth_controller import router as oauth_router
@@ -35,6 +36,7 @@ app.include_router(note_router, tags=["Notes"])
 app.include_router(secret_router, tags=["Secrets"])
 app.include_router(integration_router, tags=["Integrations"])
 app.include_router(email_router, tags=["Email"])
+app.include_router(github_router, tags=["Github"])
 
 @app.get("/")
 async def root():
