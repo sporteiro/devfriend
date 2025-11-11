@@ -117,11 +117,11 @@
         No GitHub integration configured yet.
       </div>
       <div class="actions">
-        <button @click="connectWithPAT" class="add-btn" :disabled="connecting" style="width: 100%; max-width: 300px; padding: 15px; font-size: 16px;">
+        <button @click="connectWithOAuth" class="add-btn" :disabled="connecting" style="width: 100%; max-width: 300px; padding: 15px; font-size: 16px;">
           {{ connecting ? 'Connecting...' : '🔗 Connect with GitHub' }}
         </button>
         <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-secondary);">
-          Connect using Personal Access Token
+          Connect using GitHub OAuth
         </p>
       </div>
     </div>
@@ -155,8 +155,22 @@
             </p>
           </div>
 
+          <div class="oauth-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+            <p style="margin-bottom: 10px; font-weight: bold;">Connect with GitHub OAuth:</p>
+            <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+              This will automatically create credentials and integration
+            </p>
+            <button
+              @click="connectWithOAuth"
+              class="oauth-btn"
+              :disabled="connecting"
+              style="width: 100%; padding: 12px; background: #24292e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
+            >
+              {{ connecting ? 'Connecting...' : '🔗 Connect with GitHub' }}
+            </button>
+          </div>
           <div class="pat-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-            <p style="margin-bottom: 10px; font-weight: bold;">Connect with Personal Access Token:</p>
+            <p style="margin-bottom: 10px; font-weight: bold;">Or use Personal Access Token:</p>
             <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
               Create a GitHub PAT with repo and read:user scopes
             </p>
@@ -164,9 +178,9 @@
               @click="connectWithPAT"
               class="pat-btn"
               :disabled="connecting"
-              style="width: 100%; padding: 12px; background: #24292e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
+              style="width: 100%; padding: 12px; background: #586069; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
             >
-              {{ connecting ? 'Connecting...' : '🔗 Connect with GitHub' }}
+              {{ connecting ? 'Connecting...' : 'Use PAT Instead' }}
             </button>
           </div>
         </div>
@@ -271,6 +285,41 @@ export default {
       } catch (error) {
         console.error('Error creating GitHub integration:', error);
         this.$toast.error('Failed to connect GitHub integration');
+      } finally {
+        this.connecting = false;
+      }
+    },
+
+    async connectWithOAuth() {
+      this.connecting = true;
+      try {
+        const token = localStorage.getItem('devfriend_token');
+        if (!token) {
+          this.$toast.error('Please log in first');
+          this.connecting = false;
+          return;
+        }
+
+        const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
+        const axios = (await import('axios')).default;
+
+        const response = await axios.get(`${API_URL}/auth/github/authorize`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const authUrl = response.data?.auth_url;
+        if (authUrl) {
+          window.location.href = authUrl;
+        } else {
+          throw new Error('No auth URL received from GitHub OAuth endpoint');
+        }
+      } catch (error) {
+        console.error('Error initiating GitHub OAuth:', error);
+        if (error.response?.data?.detail) {
+          this.$toast.error(error.response.data.detail);
+        } else {
+          this.$toast.error('Failed to connect with GitHub');
+        }
       } finally {
         this.connecting = false;
       }

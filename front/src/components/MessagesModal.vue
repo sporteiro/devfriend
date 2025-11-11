@@ -285,7 +285,11 @@ export default {
         }
       } catch (error) {
         console.error('Error initiating Slack OAuth:', error);
-        this.$toast.error('Slack integration not available yet');
+        if (error.response?.data?.detail) {
+          this.$toast.error(error.response.data.detail);
+        } else {
+          this.$toast.error('Failed to connect with Slack');
+        }
       } finally {
         this.connecting = false;
       }
@@ -308,12 +312,13 @@ export default {
 
     async syncSlack() {
       try {
-        await messagesService.syncSlack(this.slackIntegration.id);
+        await messagesService.syncMessages(this.slackIntegration.id);
         this.$toast.success('Slack sync completed successfully');
         await this.loadSlackIntegrations();
       } catch (error) {
         console.error('Error syncing Slack:', error);
-        this.$toast.error('Slack integration not available yet');
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to sync Slack';
+        this.$toast.error(errorMessage);
       }
     },
 
@@ -332,10 +337,16 @@ export default {
         });
 
         this.messages = response || [];
-        this.$toast.info('Slack integration not fully implemented yet');
+
+        if (this.messages.length === 0) {
+          this.$toast.info('No messages found');
+        } else {
+          this.$toast.success(`Loaded ${this.messages.length} messages`);
+        }
       } catch (error) {
         console.error('Error loading messages:', error);
-        this.$toast.error('Slack integration not available yet');
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to load messages';
+        this.$toast.error(errorMessage);
       } finally {
         this.loadingMessages = false;
       }

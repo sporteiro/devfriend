@@ -104,18 +104,18 @@
 
 
       <div v-else-if="currentSection === 'emailmodal'">
-        <EmailModal />
+        <EmailModal ref="emailModal" />
       </div>
 
 
       <!-- Sección Repository -->
       <div v-else-if="currentSection === 'repositorymodal'">
-        <RepositoryModal @navigate="navigateToSection" />
+        <RepositoryModal ref="repositoryModal" @navigate="navigateToSection" />
       </div>
 
       <!-- Sección Messages -->
       <div v-else-if="currentSection === 'messagesmodal'">
-        <MessagesModal @navigate="navigateToSection" />
+        <MessagesModal ref="messagesModal" @navigate="navigateToSection" />
       </div>
 
       <!-- Sección Credentials -->
@@ -398,19 +398,48 @@ export default {
         }
       }
 
-      // Handle Gmail OAuth callback (integration successful)
+      // Handle OAuth callback (integration successful) - for Gmail, GitHub, Slack
       if (oauthSuccess === 'true') {
-        this.$toast.success('Gmail integration connected successfully!');
+        const warning = urlParams.get('warning');
 
-        // Reload email integrations if we're on that section
-        if (this.currentSection === 'emailmodal') {
-          // Trigger reload in EmailModal component
+        if (warning === 'integration_failed') {
+          this.$toast.warning('Credentials saved but integration creation failed. Please try connecting again.');
+        } else {
+          // Try to determine service from URL or navigate to appropriate section
+          // If we have integration_id, we can't determine the service, so show generic message
+          // Otherwise, try to reload the current section's integrations
+          let successMessage = 'Integration connected successfully!';
+          let targetSection = null;
+
+          // Try to reload based on current section
+          if (this.currentSection === 'emailmodal') {
+            successMessage = 'Gmail integration connected successfully!';
+            targetSection = 'emailmodal';
+          } else if (this.currentSection === 'repositorymodal') {
+            successMessage = 'GitHub integration connected successfully!';
+            targetSection = 'repositorymodal';
+          } else if (this.currentSection === 'messagesmodal') {
+            successMessage = 'Slack integration connected successfully!';
+            targetSection = 'messagesmodal';
+          }
+
+          // If we're not in the right section, navigate to it first
+          if (targetSection && this.currentSection !== targetSection) {
+            this.navigateToSection(targetSection);
+          }
+
+          // Trigger reload in the appropriate component
           this.$nextTick(() => {
-            const emailModal = this.$children.find(child => child.$options.name === 'EmailModal');
-            if (emailModal && emailModal.loadEmailIntegrations) {
-              emailModal.loadEmailIntegrations();
+            if (targetSection === 'emailmodal' && this.$refs.emailModal && this.$refs.emailModal.loadEmailIntegrations) {
+              this.$refs.emailModal.loadEmailIntegrations();
+            } else if (targetSection === 'repositorymodal' && this.$refs.repositoryModal && this.$refs.repositoryModal.loadGithubIntegrations) {
+              this.$refs.repositoryModal.loadGithubIntegrations();
+            } else if (targetSection === 'messagesmodal' && this.$refs.messagesModal && this.$refs.messagesModal.loadSlackIntegrations) {
+              this.$refs.messagesModal.loadSlackIntegrations();
             }
           });
+
+          this.$toast.success(successMessage);
         }
 
         // Clean URL
