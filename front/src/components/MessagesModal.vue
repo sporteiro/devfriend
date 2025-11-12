@@ -360,34 +360,4 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Usar mismos estilos que EmailModal */
-.slack-modal {
-  padding: 20px;
-}
-
-.message-item {
-  border: 1px solid #e1e4e8;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
-  background: white;
-}
-
-.message-channel {
-  font-weight: 600;
-  color: #4A154B;
-  margin-bottom: 4px;
-}
-
-.message-content {
-  margin-bottom: 4px;
-}
-
-.message-meta {
-  font-size: 0.8em;
-  color: #666;
-  display: flex;
-  justify-content: space-between;
-}
-</style>
+<style scoped src="./EmailModal.css"></style>
