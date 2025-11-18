@@ -57,7 +57,20 @@ class GitHubService:
                 if 'last_sync' in config:
                     mapped['last_sync'] = config.get('last_sync')
 
-                logger.debug(f"Mapped integration {mapped.get('id')}: github_username={mapped.get('github_username')}, status={mapped.get('status')}")
+                # Get notification count if integration is connected
+                notification_count = 0
+                if mapped.get('status') == 'connected' and integration.get('id'):
+                    try:
+                        github_client = self._get_github_client(integration.get('id'))
+                        notification_count = github_client.get_notifications_count()
+                        logger.debug(f"Integration {integration.get('id')} has {notification_count} unread notifications")
+                    except Exception as e:
+                        logger.warning(f"Could not get notification count for integration {integration.get('id')}: {str(e)}")
+                        notification_count = 0
+
+                mapped['notification_count'] = notification_count
+
+                logger.debug(f"Mapped integration {mapped.get('id')}: github_username={mapped.get('github_username')}, status={mapped.get('status')}, notification_count={notification_count}")
                 mapped_integrations.append(mapped)
 
             logger.info(f"Returning {len(mapped_integrations)} mapped integrations")
@@ -342,47 +355,4 @@ class GitHubService:
                         self.integration_service.update_integration(integration_id, update_data)
                 except:
                     pass
-            raise e
-
-    def get_github_stats(self, integration_id: int):
-        """
-        Get GitHub statistics
-
-        Returns:
-            Dictionary with GitHub statistics
-        """
-        try:
-            # Get GitHub client
-            github_client = self._get_github_client(integration_id)
-
-            # Get user profile for basic info
-            user_profile = github_client.get_user()
-
-            # Get repositories for counts
-            repos = github_client.get_repos(visibility='all')
-            public_repos = [repo for repo in repos if repo.get('private') is False] if repos else []
-            private_repos = [repo for repo in repos if repo.get('private') is True] if repos else []
-
-            # Get integration for last_sync
-            integration = self.integration_service.get_integration(integration_id)
-            config = integration.get('config', {}) if integration else {}
-            if isinstance(config, str):
-                config = json.loads(config)
-            if not isinstance(config, dict):
-                config = {}
-            last_sync = config.get('last_sync', None)
-
-            return {
-                'username': user_profile.get('login', ''),
-                'name': user_profile.get('name', ''),
-                'public_repos_count': len(public_repos),
-                'private_repos_count': len(private_repos),
-                'total_repos_count': len(repos) if repos else 0,
-                'followers': user_profile.get('followers', 0),
-                'following': user_profile.get('following', 0),
-                'last_sync': last_sync
-            }
-
-        except Exception as e:
-            logger.error(f"Error getting GitHub stats for integration {integration_id}: {str(e)}")
             raise e

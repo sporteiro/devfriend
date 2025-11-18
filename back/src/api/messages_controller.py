@@ -1,4 +1,4 @@
-import traceback
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -8,6 +8,7 @@ from src.services.integration_service import IntegrationService
 from src.services.slack_service import SlackService
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/messages/integrations")
@@ -16,29 +17,27 @@ def get_slack_integrations(current_user_id: int = Depends(get_current_user_id)):
     Get Slack integrations for the user
     """
     try:
-        print(f"DEBUG: Entering Slack endpoint, user_id: {current_user_id}")
+        logger.debug(f"Getting Slack integrations for user {current_user_id}")
         slack_service = SlackService(current_user_id)
-        print("DEBUG: SlackService created")
         integrations = slack_service.get_slack_integrations()
-        print(f"DEBUG: Got {len(integrations)} integrations")
+        logger.debug(f"Retrieved {len(integrations)} Slack integrations")
         return integrations
     except Exception as e:
-        print(f"ERROR in Slack endpoint: {e}")
-        print(f"TRACEBACK: {traceback.format_exc()}")
+        logger.error(f"Error getting Slack integrations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/messages/integrations")
 def create_slack_integration(integration_data: dict, current_user: User = Depends(get_current_user_id)):
-    print(f'slack_integration_data: {integration_data}')
     """
     Create a new Slack integration
     """
     try:
+        logger.debug(f"Creating Slack integration for user {current_user.id}")
         slack_service = SlackService(current_user)
         integration = slack_service.create_slack_integration(integration_data)
         return integration
     except Exception as e:
-        print(f'Error creating Slack integration: {e}')
+        logger.error(f"Error creating Slack integration: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/messages/integrations/{integration_id}")
@@ -87,18 +86,6 @@ def get_messages(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/messages/integrations/{integration_id}/workspace")
-def get_workspace_info(integration_id: int, current_user: User = Depends(get_current_user_id)):
-    """
-    Get Slack workspace information from integration
-    """
-    try:
-        slack_service = SlackService(current_user)
-        workspace_info = slack_service.get_workspace_info(integration_id)
-        return workspace_info
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.post("/messages/integrations/{integration_id}/sync")
 def sync_slack(integration_id: int, current_user: User = Depends(get_current_user_id)):
     """
@@ -108,17 +95,5 @@ def sync_slack(integration_id: int, current_user: User = Depends(get_current_use
         slack_service = SlackService(current_user)
         slack_service.sync_slack(integration_id)
         return {"message": "Slack sync started successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/messages/integrations/{integration_id}/stats")
-def get_slack_stats(integration_id: int, current_user: User = Depends(get_current_user_id)):
-    """
-    Get Slack statistics
-    """
-    try:
-        slack_service = SlackService(current_user)
-        stats = slack_service.get_slack_stats(integration_id)
-        return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

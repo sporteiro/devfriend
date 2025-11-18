@@ -1,4 +1,4 @@
-import traceback
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -8,6 +8,7 @@ from src.services.email_service import EmailService
 from src.services.integration_service import IntegrationService
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/email/integrations")
@@ -16,30 +17,28 @@ def get_email_integrations(current_user_id: int = Depends(get_current_user_id)):
     Get email integrations for the user
     """
     try:
-        print(f"DEBUG: Entering endpoint, user_id: {current_user_id}")
+        logger.debug(f"Getting email integrations for user {current_user_id}")
         email_service = EmailService(current_user_id)
-        print("DEBUG: EmailService created")
         integrations = email_service.get_email_integrations()
-        print(f"DEBUG: Got {len(integrations)} integrations")
+        logger.debug(f"Retrieved {len(integrations)} email integrations")
         return integrations
     except Exception as e:
-        print(f"ERROR in endpoint: {e}")
-        print(f"TRACEBACK: {traceback.format_exc()}")
+        logger.error(f"Error getting email integrations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/email/integrations")
 def create_email_integration(integration_data: dict, current_user: User = Depends(get_current_user_id)):
-    print(f'integration_data: {integration_data}')
     """
     Create a new email integration
     """
     try:
+        logger.debug(f"Creating email integration for user {current_user.id}")
         email_service = EmailService(current_user)
         integration = email_service.create_email_integration(integration_data)
         return integration
     except Exception as e:
-        print(f'Error creating email integration: {e}')
+        logger.error(f"Error creating email integration: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/email/integrations/{integration_id}")
@@ -88,17 +87,5 @@ def sync_emails(integration_id: int, current_user: User = Depends(get_current_us
         email_service = EmailService(current_user)
         email_service.sync_emails(integration_id)
         return {"message": "Email sync started successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/email/integrations/{integration_id}/stats")
-def get_email_stats(integration_id: int, current_user: User = Depends(get_current_user_id)):
-    """
-    Get email statistics
-    """
-    try:
-        email_service = EmailService(current_user)
-        stats = email_service.get_email_stats(integration_id)
-        return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

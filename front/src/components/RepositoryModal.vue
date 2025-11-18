@@ -417,5 +417,4 @@ export default {
 };
 </script>
 
-<style scoped src="./RepositoryModal.css"></style >
-<style scoped src="./EmailModal.css"></style>
+<style scoped src="./RepositoryModal.css"></style>

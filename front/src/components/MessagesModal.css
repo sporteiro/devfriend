@@ -1,12 +1,12 @@
 /* Importar estilos compartidos de integración */
 @import './IntegrationModal.css';
 
-.email-modal {
+.slack-modal {
   padding: 20px;
 }
 
-/* Lista de emails */
-.emails-list {
+/* Lista de mensajes */
+.messages-list {
   margin-top: 20px;
   padding: 20px;
   background: var(--bg-secondary);
@@ -14,27 +14,27 @@
   border: 1px solid var(--border-color);
 }
 
-.emails-list h3 {
+.messages-list h3 {
   margin: 0 0 15px 0;
   color: var(--text-color);
   font-size: 1.1em;
 }
 
-.loading-emails {
+.loading-messages {
   text-align: center;
   padding: 20px;
   color: var(--text-secondary);
   font-style: italic;
 }
 
-.no-emails {
+.no-messages {
   text-align: center;
   padding: 20px;
   color: var(--text-secondary);
   font-style: italic;
 }
 
-.emails-list-items {
+.messages-list-items {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -43,7 +43,7 @@
   gap: 12px;
 }
 
-.email-item {
+.message-item {
   padding: 15px;
   background: var(--bg-color);
   border-radius: 6px;
@@ -51,60 +51,44 @@
   transition: all 0.2s;
 }
 
-.email-item:hover {
+.message-item:hover {
   border-color: var(--accent-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.email-title {
+.message-channel {
   font-weight: 600;
-  font-size: 1em;
+  color: #4A154B;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+}
+
+.message-content {
   color: var(--text-color);
   margin-bottom: 8px;
   word-wrap: break-word;
 }
 
-.email-meta {
+.message-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
-  font-size: 0.9em;
+  font-size: 0.85em;
+  color: var(--text-secondary);
   flex-wrap: wrap;
 }
 
-.email-from {
-  color: var(--text-color);
+.message-user {
   font-weight: 500;
+  color: var(--text-color);
 }
 
-.email-date {
+.message-date {
   color: var(--text-secondary);
   font-size: 0.85em;
 }
 
-.email-unread-badge {
-  background: var(--accent-color);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.email-snippet {
-  color: var(--text-secondary);
-  font-size: 0.9em;
-  line-height: 1.4;
-  margin-top: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.close-emails-btn {
+.close-messages-btn {
   margin-top: 15px;
   background: var(--bg-tertiary);
   color: var(--text-color);
@@ -117,6 +101,6 @@
   transition: all 0.2s;
 }
 
-.close-emails-btn:hover {
+.close-messages-btn:hover {
   background: var(--bg-secondary);
 }

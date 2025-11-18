@@ -51,7 +51,15 @@ class OAuthConfig:
         'https://www.googleapis.com/auth/userinfo.profile'
     ]
     GITHUB_SCOPES = ['repo', 'read:user', 'notifications']
-    SLACK_SCOPES = ['channels:read', 'chat:write', 'users:read', 'users:read.email']
+    SLACK_SCOPES = scopes = [
+        'channels:read',
+        'channels:history',
+        'team:read',
+        'groups:read',
+        'groups:history',
+        'im:history',
+        'mpim:history'
+    ]
 
     def __init__(self):
         self.google_client_id = os.getenv('GOOGLE_CLIENT_ID')
