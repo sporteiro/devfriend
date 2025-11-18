@@ -40,7 +40,9 @@ services:
     volumes:
       - ./back/src:/app/src
       - ./back/tests:/app/tests
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8888 --reload --log-level debug
+      - ./back/key.pem:/app/key.pem
+      - ./back/cert.pem:/app/cert.pem
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8888 --reload --log-level debug --ssl-keyfile key.pem --ssl-certfile cert.pem
 
   front:
     build: ./front

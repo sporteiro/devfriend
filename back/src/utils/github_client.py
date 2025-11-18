@@ -70,3 +70,55 @@ class GitHubClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching GitHub repo details: {str(e)}")
             raise Exception(f"GitHub API error: {str(e)}")
+
+    def get_notifications_count(self) -> int:
+        """
+        Get count of unread notifications.
+        GitHub notifications include: mentions, comments on issues/PRs, reviews, etc.
+
+        Returns:
+            Number of unread notifications (up to 100 for performance)
+        """
+        try:
+            notification_count = 0
+            page = 1
+            per_page = 100
+            max_count = 100  # Limit to 100 for performance
+
+            while notification_count < max_count:
+                response = self.session.get(
+                    f"{self.BASE_URL}/notifications",
+                    params={
+                        'all': False,  # Only unread
+                        'per_page': per_page,
+                        'page': page
+                    }
+                )
+                response.raise_for_status()
+
+                notifications = response.json()
+                page_count = len(notifications)
+                notification_count += page_count
+
+                # If we got fewer than per_page, we've reached the end
+                if page_count < per_page:
+                    break
+
+                # Check if there are more pages from Link header
+                link_header = response.headers.get('Link', '')
+                if 'rel="next"' not in link_header:
+                    break
+
+                page += 1
+
+                # Safety limit
+                if notification_count >= max_count:
+                    break
+
+            logger.debug(f"Retrieved GitHub notifications count: {notification_count}")
+            return min(notification_count, max_count)
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error getting GitHub notifications count: {str(e)}")
+            # Return 0 on error instead of raising
+            return 0

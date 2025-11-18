@@ -20,14 +20,16 @@
       class="nav-item"
     >
       Email
-      <span class="notification-badge">3</span>
+      <span v-if="emailUnreadCount > 0" class="notification-badge">{{ emailUnreadCount }}</span>
     </a>
     <a
       href="#"
       :class="{ active: currentSection === 'repositorymodal' }"
       @click="navigateTo('repositorymodal')"
+      class="nav-item"
     >
       Repository
+      <span v-if="githubNotificationCount > 0" class="notification-badge">{{ githubNotificationCount }}</span>
     </a>
     <a
       href="#"
@@ -36,7 +38,7 @@
       class="nav-item"
     >
       Messages
-      <span class="notification-badge">12</span>
+      <span v-if="slackUnreadCount > 0" class="notification-badge">{{ slackUnreadCount }}</span>
     </a>
     <a
       href="#"
@@ -77,6 +79,9 @@ export default {
     isDarkMode: { type: Boolean, required: true },
     currentSection: { type: String, default: 'notes' },
     user: { type: Object, default: null },
+    emailUnreadCount: { type: Number, default: 0 },
+    slackUnreadCount: { type: Number, default: 0 },
+    githubNotificationCount: { type: Number, default: 0 },
   },
   methods: {
     navigateTo(section) {

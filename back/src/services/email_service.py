@@ -57,7 +57,20 @@ class EmailService:
                 if 'last_sync' in config:
                     mapped['last_sync'] = config.get('last_sync')
 
-                logger.debug(f"Mapped integration {mapped.get('id')}: email_address={mapped.get('email_address')}, status={mapped.get('status')}")
+                # Get unread count if integration is connected
+                unread_count = 0
+                if mapped.get('status') == 'connected' and integration.get('id'):
+                    try:
+                        gmail_client = self._get_gmail_client(integration.get('id'))
+                        unread_count = gmail_client.get_unread_count()
+                        logger.debug(f"Integration {integration.get('id')} has {unread_count} unread messages")
+                    except Exception as e:
+                        logger.warning(f"Could not get unread count for integration {integration.get('id')}: {str(e)}")
+                        unread_count = 0
+
+                mapped['unread_count'] = unread_count
+
+                logger.debug(f"Mapped integration {mapped.get('id')}: email_address={mapped.get('email_address')}, status={mapped.get('status')}, unread_count={unread_count}")
                 mapped_integrations.append(mapped)
 
             logger.info(f"Returning {len(mapped_integrations)} mapped integrations")
@@ -350,44 +363,4 @@ class EmailService:
                         self.integration_service.update_integration(integration_id, update_data)
                 except:
                     pass
-            raise e
-
-    def get_email_stats(self, integration_id: int):
-        """
-        Get email statistics from Gmail API
-
-        Returns:
-            Dictionary with email statistics
-        """
-        try:
-            # Get Gmail client
-            gmail_client = self._get_gmail_client(integration_id)
-
-            # Get profile for total counts
-            profile = gmail_client.get_profile()
-
-            # Get unread count estimate (Gmail API requires pagination for exact count)
-            # We'll get a sample to see if there are unread emails
-            unread_messages = gmail_client.get_messages(max_results=1, query='is:unread')
-            has_unread = len(unread_messages) > 0
-
-            # Get integration for last_sync
-            integration = self.integration_service.get_integration(integration_id)
-            config = integration.get('config', {}) if integration else {}
-            if isinstance(config, str):
-                config = json.loads(config)
-            if not isinstance(config, dict):
-                config = {}
-            last_sync = config.get('last_sync', None)
-
-            return {
-                'total_emails': profile.get('messages_total', 0),
-                'total_threads': profile.get('threads_total', 0),
-                'has_unread': has_unread,
-                'last_sync': last_sync,
-                'email_address': profile.get('email_address', '')
-            }
-
-        except Exception as e:
-            logger.error(f"Error getting email stats for integration {integration_id}: {str(e)}")
             raise e

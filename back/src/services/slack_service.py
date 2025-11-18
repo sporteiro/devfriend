@@ -58,7 +58,20 @@ class SlackService:
                 if 'last_sync' in config:
                     mapped['last_sync'] = config.get('last_sync')
 
-                logger.debug(f"Mapped integration {mapped.get('id')}: workspace_name={mapped.get('workspace_name')}, status={mapped.get('status')}")
+                # Get unread count if integration is connected
+                unread_count = 0
+                if mapped.get('status') == 'connected' and integration.get('id'):
+                    try:
+                        slack_client = self._get_slack_client(integration.get('id'))
+                        unread_count = slack_client.get_unread_count()
+                        logger.debug(f"Integration {integration.get('id')} has {unread_count} unread messages")
+                    except Exception as e:
+                        logger.warning(f"Could not get unread count for integration {integration.get('id')}: {str(e)}")
+                        unread_count = 0
+
+                mapped['unread_count'] = unread_count
+
+                logger.debug(f"Mapped integration {mapped.get('id')}: workspace_name={mapped.get('workspace_name')}, status={mapped.get('status')}, unread_count={unread_count}")
                 mapped_integrations.append(mapped)
 
             logger.info(f"Returning {len(mapped_integrations)} mapped integrations")
@@ -384,51 +397,4 @@ class SlackService:
                         self.integration_service.update_integration(integration_id, update_data)
                 except:
                     pass
-            raise e
-
-    def get_slack_stats(self, integration_id: int):
-        """
-        Get Slack statistics
-
-        Returns:
-            Dictionary with Slack statistics
-        """
-        try:
-            # Get Slack client
-            slack_client = self._get_slack_client(integration_id)
-
-            # Get workspace info for basic info
-            workspace_info = slack_client.get_workspace_info()
-
-            # Get channels for counts
-            channels = slack_client.get_channels(exclude_archived=True)
-            public_channels = [ch for ch in channels if not ch.get('is_private', False)] if channels else []
-            private_channels = [ch for ch in channels if ch.get('is_private', False)] if channels else []
-
-            # Get users count
-            users = slack_client.get_users()
-            active_users = [u for u in users if not u.get('deleted', False)] if users else []
-
-            # Get integration for last_sync
-            integration = self.integration_service.get_integration(integration_id)
-            config = integration.get('config', {}) if integration else {}
-            if isinstance(config, str):
-                config = json.loads(config)
-            if not isinstance(config, dict):
-                config = {}
-            last_sync = config.get('last_sync', None)
-
-            return {
-                'workspace_name': workspace_info.get('name', ''),
-                'workspace_id': workspace_info.get('id', ''),
-                'public_channels_count': len(public_channels),
-                'private_channels_count': len(private_channels),
-                'total_channels_count': len(channels) if channels else 0,
-                'active_users_count': len(active_users),
-                'total_users_count': len(users) if users else 0,
-                'last_sync': last_sync
-            }
-
-        except Exception as e:
-            logger.error(f"Error getting Slack stats for integration {integration_id}: {str(e)}")
             raise e

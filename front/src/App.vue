@@ -15,6 +15,9 @@
       :isDarkMode="isDarkMode"
       :currentSection="currentSection"
       :user="user"
+      :emailUnreadCount="emailUnreadCount"
+      :slackUnreadCount="slackUnreadCount"
+      :githubNotificationCount="githubNotificationCount"
       @update:isDarkMode="toggleDarkMode"
       @navigate="navigateToSection"
       @show-login="showLogin"
@@ -143,6 +146,9 @@ import EmailModal from "./components/EmailModal.vue";
 import RepositoryModal from "./components/RepositoryModal.vue";
 import MessagesModal from "./components/MessagesModal.vue";
 import { noteService } from "./services/noteService.js";
+import { emailService } from "./services/emailService.js";
+import { messagesService } from "./services/messagesService.js";
+import { githubService } from "./services/githubService.js";
 import "./App.css";
 
 export default {
@@ -169,6 +175,9 @@ export default {
       currentSection: 'notes',
       showAuthModal: false,
       user: null,
+      emailUnreadCount: 0,
+      slackUnreadCount: 0,
+      githubNotificationCount: 0,
     };
   },
   mounted() {
@@ -177,6 +186,7 @@ export default {
     this.checkAuth();
     this.loadNotes();
     this.handleOAuthCallback();
+    this.loadUnreadCounts();
   },
   methods: {
     toggleDarkMode(value) {
@@ -245,6 +255,10 @@ export default {
     navigateToSection(section) {
       this.currentSection = section;
       this.sidebarOpen = false; // Cerrar sidebar en móvil
+      // Reload unread counts when navigating to integration sections
+      if (section === 'emailmodal' || section === 'messagesmodal' || section === 'repositorymodal') {
+        this.loadUnreadCounts();
+      }
     },
     async exportNotes() {
       try {
@@ -308,6 +322,48 @@ export default {
       }
       if (authService.isAuthenticated()) {
         await this.loadNotes();
+        await this.loadUnreadCounts();
+      }
+    },
+    async loadUnreadCounts() {
+      try {
+        // Load email unread count
+        const emailIntegrations = await emailService.getIntegrations();
+        if (emailIntegrations && emailIntegrations.length > 0) {
+          // Sum all unread counts from all email integrations
+          this.emailUnreadCount = emailIntegrations.reduce((sum, integration) => {
+            return sum + (integration.unread_count || 0);
+          }, 0);
+        } else {
+          this.emailUnreadCount = 0;
+        }
+
+        // Load Slack unread count
+        const slackIntegrations = await messagesService.getIntegrations();
+        if (slackIntegrations && slackIntegrations.length > 0) {
+          // Sum all unread counts from all Slack integrations
+          this.slackUnreadCount = slackIntegrations.reduce((sum, integration) => {
+            return sum + (integration.unread_count || 0);
+          }, 0);
+        } else {
+          this.slackUnreadCount = 0;
+        }
+
+        // Load GitHub notification count
+        const githubIntegrations = await githubService.getIntegrations();
+        if (githubIntegrations && githubIntegrations.length > 0) {
+          // Sum all notification counts from all GitHub integrations
+          this.githubNotificationCount = githubIntegrations.reduce((sum, integration) => {
+            return sum + (integration.notification_count || 0);
+          }, 0);
+        } else {
+          this.githubNotificationCount = 0;
+        }
+      } catch (error) {
+        console.error('Error loading unread counts:', error);
+        this.emailUnreadCount = 0;
+        this.slackUnreadCount = 0;
+        this.githubNotificationCount = 0;
       }
     },
     showLogin() {
@@ -429,13 +485,16 @@ export default {
           }
 
           // Trigger reload in the appropriate component
-          this.$nextTick(() => {
+          this.$nextTick(async () => {
             if (targetSection === 'emailmodal' && this.$refs.emailModal && this.$refs.emailModal.loadEmailIntegrations) {
-              this.$refs.emailModal.loadEmailIntegrations();
+              await this.$refs.emailModal.loadEmailIntegrations();
+              await this.loadUnreadCounts();
             } else if (targetSection === 'repositorymodal' && this.$refs.repositoryModal && this.$refs.repositoryModal.loadGithubIntegrations) {
-              this.$refs.repositoryModal.loadGithubIntegrations();
+              await this.$refs.repositoryModal.loadGithubIntegrations();
+              await this.loadUnreadCounts();
             } else if (targetSection === 'messagesmodal' && this.$refs.messagesModal && this.$refs.messagesModal.loadSlackIntegrations) {
-              this.$refs.messagesModal.loadSlackIntegrations();
+              await this.$refs.messagesModal.loadSlackIntegrations();
+              await this.loadUnreadCounts();
             }
           });
 

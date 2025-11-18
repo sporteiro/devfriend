@@ -1,9 +1,8 @@
+/* Importar estilos compartidos de integración */
+@import './IntegrationModal.css';
+
 .repository-modal {
   padding: 20px;
-}
-
-.loading-state, .error-state, .integration-empty, .integration-existing {
-  margin: 20px 0;
 }
 
 .repo-item {

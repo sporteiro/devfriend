@@ -140,3 +140,50 @@ class SlackClient:
         except Exception as e:
             logger.error(f"Error fetching Slack users: {str(e)}")
             raise
+
+    def get_unread_count(self) -> int:
+        """
+        Get count of unread messages across all channels.
+        Uses conversations.list to get unread counts from each channel.
+
+        Returns:
+            Total number of unread messages across all channels
+        """
+        try:
+            unread_count = 0
+            cursor = None
+
+            while True:
+                params = {
+                    'exclude_archived': True,
+                    'types': 'public_channel,private_channel,mpim,im'  # All conversation types
+                }
+                if cursor:
+                    params['cursor'] = cursor
+
+                response = self._make_request('GET', 'conversations.list', params=params)
+                channels = response.get('channels', [])
+
+                # Sum unread counts from all channels
+                for channel in channels:
+                    # unread_count_display shows unread count for the channel
+                    unread = channel.get('unread_count_display', 0)
+                    if unread and unread > 0:
+                        unread_count += unread
+
+                # Check if there are more pages
+                cursor = response.get('response_metadata', {}).get('next_cursor')
+                if not cursor:
+                    break
+
+                # Safety limit: don't process more than 1000 channels
+                if len(channels) == 0:
+                    break
+
+            logger.debug(f"Retrieved Slack unread count: {unread_count}")
+            return unread_count
+
+        except Exception as e:
+            logger.error(f"Error getting Slack unread count: {str(e)}")
+            # Return 0 on error instead of raising
+            return 0

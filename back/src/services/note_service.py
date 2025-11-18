@@ -12,9 +12,6 @@ class NoteService:
         note = Note(title=title, content=content, user_id=user_id)
         return self.note_repository.save(note)
 
-    def get_all_notes(self) -> List[Note]:
-        return self.note_repository.find_all()
-
     def get_notes_by_user(self, user_id: int) -> List[Note]:
         return self.note_repository.find_by_user(user_id)
 
