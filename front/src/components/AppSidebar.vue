@@ -1,5 +1,14 @@
 <template>
   <aside :class="['sidebar', { open: sidebarOpen }]">
+    <!-- X solo si sidebarOpen y en móvil -->
+    <button
+      v-if="sidebarOpen"
+      class="sidebar-close"
+      @click="$emit('close-sidebar')"
+      aria-label="Close menu"
+    >
+      ×
+    </button>
     <div class="sidebar-header">
       <img src="@/assets/logo.png" alt="DevFriend Logo" class="sidebar-logo" />
       <h2 class="logo_name">DevFriend</h2>

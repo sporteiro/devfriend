@@ -45,7 +45,6 @@ import { secretService } from '../services/secretService';
 // Esquemas por servicio
 const credentialSchemas = {
   github: [
-    { key: 'token', label: 'Personal Access Token', secret: true, placeholder: '', },
     { key: 'client_id', label: 'Client ID', secret: false, placeholder: '', },
     { key: 'client_secret', label: 'Client Secret', secret: true, placeholder: '', },
   ],

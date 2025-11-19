@@ -244,22 +244,27 @@ html, body {
 
 /* Botón menú (solo móvil) */
 .menu-toggle {
-  display: none;
+  display: flex;
   position: fixed;
   top: 10px;
   left: 10px;
-  background-color: #000; /* negro */
-  color: white;
+  background: #000 !important;
+  color: #fff;
   border: none;
-  font-size: 24px;
-  padding: 8px 12px;
-  z-index: 1000;
-  cursor: pointer;
-  border-radius: 4px;
+  font-size: 2rem;
+  width: 48px;
+  height: 44px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.menu-toggle:hover {
+  background: #333 !important;
 }
 
-.menu-toggle:hover {
-  background-color: #555;
+.menu-close {
+  font-size: 2.1rem;
 }
 
 /* Responsividad: botón visible en móvil */
@@ -267,4 +272,88 @@ html, body {
   .menu-toggle {
     display: block;
   }
+}
+
+/* Header fijo móvil */
+.mobile-header {
+  display: none;
+  width: 100vw;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  position: relative;
+  height: 52px;
+  z-index: 1002;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.header-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.header-title {
+  font-size: 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #fb6523;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 1px #0001;
+}
+
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+    padding: 0 0 0 62px;
+  }
+  .app-container {
+    flex-direction: column !important;
+  }
+  .content {
+    padding-top: 58px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-header,
+  .menu-toggle,
+  .sidebar-close {
+    display: none !important;
+  }
+}
+
+/* Botón X cerrar en el sidebar */
+.sidebar-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 2.2rem;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  z-index: 1550;
+  padding: 4px 10px 8px 10px;
+  line-height: 1;
+}
+.dark .sidebar-close {
+  color: #eee;
+}
+.sidebar-close:focus,.sidebar-close:hover {
+  color: #fb6523;
+}
+
+/* Ocultar header cuando sidebar abierto */
+@media (max-width: 768px) {
+  .app-container .mobile-header { display: flex !important; }
+  .app-container .mobile-header[style*='display: none'] { display:none !important; }
 }

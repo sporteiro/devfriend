@@ -1,15 +1,22 @@
 <template>
   <div :class="['app-container', { dark: isDarkMode }]">
-    <!-- Botón móvil para abrir/cerrar sidebar -->
-    <button
-      class="menu-toggle"
-      @click="sidebarOpen = !sidebarOpen"
-      :aria-label="sidebarOpen ? 'Close menu' : 'Open menu'"
-      aria-expanded="sidebarOpen"
-    >
-      ☰
-    </button>
 
+    <!-- Header/top solo visible si sidebar cerrado -->
+    <header class="mobile-header" v-if="!sidebarOpen">
+      <button
+        class="menu-toggle"
+        @click="sidebarOpen = true"
+        aria-label="Open menu"
+        :aria-expanded="sidebarOpen.toString()"
+      >
+        ☰
+      </button>
+      <div class="header-center">
+        <img src="@/assets/logo.png" alt="DevFriend Logo" class="header-logo" />
+        <span class="header-title">DevFriend</span>
+      </div>
+    </header>
+    <!-- sidebar contiene ahora su propio botón X en la esquina superior derecha cuando abierto -->
     <AppSidebar
       :sidebarOpen="sidebarOpen"
       :isDarkMode="isDarkMode"
@@ -22,6 +29,7 @@
       @navigate="navigateToSection"
       @show-login="showLogin"
       @logout="logout"
+      @close-sidebar="sidebarOpen = false"
     />
 
     <!-- Contenido principal -->
