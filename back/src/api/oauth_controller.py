@@ -85,6 +85,35 @@ class OAuthConfig:
         """Check if OAuth is configured (for backward compatibility - checks Google)."""
         return self.validate_google()
 
+    def get_redirect_uri_static(self, provider: str = 'google', endpoint: str = 'callback') -> str:
+        """
+        Get redirect URI from environment variables only (no request needed).
+        For GitHub and Slack, REQUIRES {PROVIDER}_REDIRECT_URI to be set (no fallbacks).
+        """
+        env_var_name = f"{provider.upper()}_REDIRECT_URI"
+        env_redirect_uri = os.getenv(env_var_name)
+
+        # For GitHub and Slack, the redirect URI MUST be set in environment variable
+        # No fallbacks allowed - it's fixed and must match OAuth app configuration
+        if provider in ['github', 'slack']:
+            if not env_redirect_uri:
+                raise ValueError(
+                    f"{env_var_name} environment variable is required for {provider}. "
+                    f"GitHub/Slack only allow ONE redirect URI per app, so it must be set exactly."
+                )
+            return env_redirect_uri
+
+        # For Google, allow fallbacks
+        if env_redirect_uri:
+            return env_redirect_uri
+
+        backend_url = os.getenv('BACKEND_URL')
+        if backend_url:
+            return f"{backend_url.rstrip('/')}/auth/{provider}/{endpoint}"
+
+        # Fallback: return a placeholder (only for Google)
+        return f"https://your-backend-url/auth/{provider}/{endpoint}"
+
     def get_redirect_uri(self, request: Request, provider: str = 'google', endpoint: str = 'callback') -> str:
         """Generate redirect URI based on request context or environment variable.
 
@@ -156,16 +185,21 @@ class OAuthConfig:
             return 'http://localhost:88'
         return f"{scheme}://{host}"
 
-    async def exchange_code_for_tokens(self, code: str, redirect_uri: str, provider: str = 'google') -> dict:
-        """Exchange authorization code for tokens."""
+    async def exchange_code_for_tokens(self, code: str, redirect_uri: str, provider: str = 'google', client_id: str = None, client_secret: str = None) -> dict:
+        """
+        Exchange authorization code for tokens.
+        If client_id and client_secret are provided, use those; otherwise use environment variables.
+        """
         if provider == 'google':
+            cid = client_id or self.google_client_id
+            csec = client_secret or self.google_client_secret
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     self.GOOGLE_TOKEN_URL,
                     data={
                         'code': code,
-                        'client_id': self.google_client_id,
-                        'client_secret': self.google_client_secret,
+                        'client_id': cid,
+                        'client_secret': csec,
                         'redirect_uri': redirect_uri,
                         'grant_type': 'authorization_code'
                     }
@@ -173,27 +207,36 @@ class OAuthConfig:
                 response.raise_for_status()
                 return response.json()
         elif provider == 'github':
+            cid = client_id or self.github_client_id
+            csec = client_secret or self.github_client_secret
+            logger.info(f"GitHub token exchange: client_id length={len(cid) if cid else 0}, client_secret length={len(csec) if csec else 0}, redirect_uri={redirect_uri}")
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     self.GITHUB_TOKEN_URL,
                     data={
                         'code': code,
-                        'client_id': self.github_client_id,
-                        'client_secret': self.github_client_secret,
+                        'client_id': cid,
+                        'client_secret': csec,
                         'redirect_uri': redirect_uri
                     },
                     headers={'Accept': 'application/json'}
                 )
                 response.raise_for_status()
-                return response.json()
+                result = response.json()
+                logger.info(f"GitHub token exchange response keys: {list(result.keys())}")
+                if 'error' in result:
+                    logger.error(f"GitHub token exchange error: {result}")
+                return result
         elif provider == 'slack':
+            cid = client_id or self.slack_client_id
+            csec = client_secret or self.slack_client_secret
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     self.SLACK_TOKEN_URL,
                     data={
                         'code': code,
-                        'client_id': self.slack_client_id,
-                        'client_secret': self.slack_client_secret,
+                        'client_id': cid,
+                        'client_secret': csec,
                         'redirect_uri': redirect_uri
                     }
                 )
@@ -233,6 +276,48 @@ class OAuthConfig:
                 return response.json()
         else:
             raise ValueError(f"Unsupported provider: {provider}")
+
+    def get_dynamic_credentials(self, user_id: int, provider: str) -> dict:
+        """
+        Get client_id and client_secret from user's secrets of the given provider type.
+        Falls back to environment variables if not found.
+        """
+        from src.repositories.postgresql_secret_repository import (
+            PostgreSQLSecretRepository,
+        )
+        repo = PostgreSQLSecretRepository()
+
+        secrets = repo.find_all_by_type_decrypted(user_id, provider)
+        for s in secrets:
+            try:
+                datos = json.loads(s.encrypted_value) if isinstance(s.encrypted_value, str) else s.encrypted_value
+                logger.debug(f"Secret {s.id} decrypted data keys: {list(datos.keys()) if isinstance(datos, dict) else 'not a dict'}")
+                cid = datos.get('client_id')
+                csec = datos.get('client_secret')
+                if cid and csec:
+                    cid_clean = str(cid).strip()
+                    csec_clean = str(csec).strip()
+                    logger.info(f"Using user-saved {provider} credentials from secret {s.id} for user {user_id}: client_id={cid_clean[:10]}... (len={len(cid_clean)}), client_secret=*** (len={len(csec_clean)})")
+                    return {'client_id': cid_clean, 'client_secret': csec_clean}
+            except Exception as e:
+                logger.error(f"Error parsing secret {s.id}: {str(e)}", exc_info=True)
+                continue
+
+        logger.info(f"Using environment variables for {provider}")
+        if provider == 'gmail':
+            cid = str(self.google_client_id).strip() if self.google_client_id else None
+            csec = str(self.google_client_secret).strip() if self.google_client_secret else None
+            return {'client_id': cid, 'client_secret': csec}
+        elif provider == 'github':
+            cid = str(self.github_client_id).strip() if self.github_client_id else None
+            csec = str(self.github_client_secret).strip() if self.github_client_secret else None
+            logger.info(f"Env GitHub credentials: client_id={cid[:10] if cid else None}... (len={len(cid) if cid else 0}), client_secret=*** (len={len(csec) if csec else 0})")
+            return {'client_id': cid, 'client_secret': csec}
+        elif provider == 'slack':
+            cid = str(self.slack_client_id).strip() if self.slack_client_id else None
+            csec = str(self.slack_client_secret).strip() if self.slack_client_secret else None
+            return {'client_id': cid, 'client_secret': csec}
+        return {'client_id': None, 'client_secret': None}
 
 
 # Initialize config once
@@ -366,20 +451,15 @@ async def authorize_google(
 ):
     """
     Initiate Google OAuth flow for Gmail integration.
-    Uses credentials from environment variables (simplified - no secret_id needed).
-    Returns the Google OAuth authorization URL.
+    Uses client_id/client_secret from secrets if available, otherwise from .env
     """
-    if not oauth_config.validate():
-        raise HTTPException(
-            status_code=500,
-            detail="Google OAuth credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables."
-        )
-
+    creds = oauth_config.get_dynamic_credentials(current_user_id, 'gmail')
     redirect_uri = oauth_config.get_redirect_uri(request, 'google', 'callback')
+    if not creds['client_id'] or not creds['client_secret']:
+        raise HTTPException(status_code=500, detail="Google OAuth client_id/client_secret not configured.")
 
-    # Build authorization URL
     params = {
-        'client_id': oauth_config.google_client_id,
+        'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
         'scope': ' '.join(oauth_config.GMAIL_SCOPES),
         'response_type': 'code',
@@ -387,10 +467,8 @@ async def authorize_google(
         'prompt': 'consent',
         'state': str(current_user_id)
     }
-
     auth_url = f"{oauth_config.GOOGLE_AUTH_URL}?{urlencode(params)}"
-    logger.info(f"Generating OAuth URL for Gmail integration for user {current_user_id} with redirect_uri: {redirect_uri}")
-
+    logger.info(f"Generating OAuth URL for Gmail integration for user {current_user_id} (dynamic client_id)")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
 
@@ -423,11 +501,16 @@ async def google_callback(
     if not oauth_config.validate():
         raise HTTPException(status_code=500, detail="Google OAuth credentials not configured")
 
-    # Exchange code for tokens
+    # Exchange code for tokens - use same credentials as authorization
     redirect_uri = oauth_config.get_redirect_uri(request, 'google', 'callback')
+    creds = oauth_config.get_dynamic_credentials(user_id, 'gmail')
 
     try:
-        token_data = await oauth_config.exchange_code_for_tokens(code, redirect_uri, 'google')
+        token_data = await oauth_config.exchange_code_for_tokens(
+            code, redirect_uri, 'google',
+            client_id=creds['client_id'],
+            client_secret=creds['client_secret']
+        )
     except Exception as e:
         logger.error(f"Error exchanging code for tokens: {str(e)}")
         raise HTTPException(
@@ -477,11 +560,11 @@ async def google_callback(
     secret_service = SecretService(secret_repository)
 
     # Prepare credentials data
+    # redirect_uri is NOT saved - it's always fixed in environment variable
     credentials_data = {
         'client_id': oauth_config.google_client_id,
         'client_secret': oauth_config.google_client_secret,
-        'refresh_token': refresh_token,
-        'redirect_uri': redirect_uri
+        'refresh_token': refresh_token
     }
 
     secret_data = SecretCreate(
@@ -555,29 +638,22 @@ async def authorize_github(
 ):
     """
     Initiate GitHub OAuth flow for GitHub integration.
-    Uses credentials from environment variables.
-    Returns the GitHub OAuth authorization URL.
+    Uses client_id/client_secret from secrets if available, otherwise from .env
     """
-    if not oauth_config.validate_github():
-        raise HTTPException(
-            status_code=500,
-            detail="GitHub OAuth credentials not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables."
-        )
-
-    redirect_uri = oauth_config.get_redirect_uri(request, 'github', 'callback')
-
-    # Build authorization URL
+    creds = oauth_config.get_dynamic_credentials(current_user_id, 'github')
+    # Always use static redirect URI from environment (fixed, never dynamic)
+    redirect_uri = oauth_config.get_redirect_uri_static('github', 'callback')
+    if not creds['client_id'] or not creds['client_secret']:
+        raise HTTPException(status_code=500, detail="GitHub OAuth client_id/client_secret not configured.")
     params = {
-        'client_id': oauth_config.github_client_id,
+        'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
         'scope': ' '.join(oauth_config.GITHUB_SCOPES),
         'state': str(current_user_id),
         'allow_signup': 'true'
     }
-
     auth_url = f"{oauth_config.GITHUB_AUTH_URL}?{urlencode(params)}"
-    logger.info(f"Generating OAuth URL for GitHub integration for user {current_user_id} with redirect_uri: {redirect_uri}")
-
+    logger.info(f"GitHub OAuth URL for user {current_user_id}: client_id={creds['client_id'][:10]}..., redirect_uri={redirect_uri}")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
 
@@ -592,115 +668,137 @@ async def github_callback(
     Handle GitHub OAuth callback.
     Exchanges authorization code for tokens and saves access_token.
     """
-    frontend_url = oauth_config.get_frontend_url(request)
-
-    if error:
-        logger.error(f"GitHub OAuth error: {error}")
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error={error}")
-
-    if not code:
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=no_code")
-
-    # Parse state: user_id
     try:
-        user_id = int(state)
-    except (ValueError, TypeError):
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=invalid_state")
+        frontend_url = oauth_config.get_frontend_url(request)
+        logger.info(f"GitHub OAuth callback received: code={code[:10]}..., state={state}, error={error}")
 
-    if not oauth_config.validate_github():
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=config_error")
+        if error:
+            logger.error(f"GitHub OAuth error: {error}")
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error={error}")
 
-    # Exchange code for tokens
-    redirect_uri = oauth_config.get_redirect_uri(request, 'github', 'callback')
+        if not code:
+            logger.error("GitHub OAuth callback: no code provided")
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=no_code")
 
-    try:
-        token_data = await oauth_config.exchange_code_for_tokens(code, redirect_uri, 'github')
-    except Exception as e:
-        logger.error(f"Error exchanging code for tokens: {str(e)}")
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=token_exchange_failed")
+        # Parse state: user_id
+        try:
+            user_id = int(state)
+            logger.info(f"GitHub OAuth callback for user {user_id}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid state parameter: {state}, error: {str(e)}")
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=invalid_state")
 
-    access_token = token_data.get('access_token')
-    if not access_token:
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=no_access_token")
+        # Validate credentials (either from secrets or env)
+        creds = oauth_config.get_dynamic_credentials(user_id, 'github')
+        if not creds['client_id'] or not creds['client_secret']:
+            logger.error(f"GitHub OAuth credentials not configured for user {user_id}")
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=config_error")
 
-    # Get user info from GitHub to name the secret
-    try:
-        userinfo = await oauth_config.get_user_info(access_token, 'github')
-        github_username = userinfo.get('login', 'github')
-    except Exception as e:
-        logger.warning(f"Could not get user info from GitHub: {str(e)}")
-        github_username = 'github'
-
-    secret_repository = PostgreSQLSecretRepository()
-    secret_service = SecretService(secret_repository)
-
-    # Prepare credentials data
-    credentials_data = {
-        'access_token': access_token,
-        'client_id': oauth_config.github_client_id,
-        'client_secret': oauth_config.github_client_secret,
-        'redirect_uri': redirect_uri
-    }
-
-    secret_data = SecretCreate(
-        name=f"GitHub - {github_username}",
-        service_type='github',
-        datos_secrets=credentials_data
-    )
-
-    try:
-        saved_secret = secret_service.create_secret(user_id, secret_data)
-        logger.info(f"Saved GitHub credentials for user {user_id}")
-        secret_id = saved_secret.id
-    except Exception as e:
-        logger.error(f"Error creating secret: {str(e)}")
-        return RedirectResponse(url=f"{frontend_url}/?oauth_error=secret_creation_failed")
-
-    # Automatically create or update the GitHub integration
-    if secret_id:
-        from src.services.github_service import GitHubService
-        github_service = GitHubService(user_id)
-        integration_service = IntegrationService(user_id)
+        # Exchange code for tokens - use same credentials as authorization
+        # Always use static redirect URI from environment (fixed, never dynamic)
+        redirect_uri = oauth_config.get_redirect_uri_static('github', 'callback')
+        logger.info(f"Exchanging code for tokens with redirect_uri: {redirect_uri}")
 
         try:
-            # Check if user already has a GitHub integration
-            existing_integrations = integration_service.get_integrations('github')
-
-            if existing_integrations and len(existing_integrations) > 0:
-                # Update existing integration with new secret_id
-                existing_integration = existing_integrations[0]
-                integration_id = existing_integration.get('id')
-
-                logger.info(f"Updating integration {integration_id} with secret_id {secret_id}")
-                update_data = IntegrationUpdate(secret_id=secret_id)
-                integration = integration_service.update_integration(integration_id, update_data)
-            else:
-                # Create new integration
-                logger.info(f"Creating new GitHub integration for user {user_id} with secret_id {secret_id}")
-                integration_data = {'credential_id': secret_id}
-                try:
-                    integration = github_service.create_github_integration(integration_data)
-                    logger.info(f"Successfully created integration {integration.get('id')} for user {user_id}")
-                except Exception as create_error:
-                    logger.error(f"Error creating integration: {str(create_error)}", exc_info=True)
-                    raise
-
-            logger.info(f"GitHub integration ready: {integration.get('id')} for user {user_id}")
-
-            logger.info(f"Redirecting to frontend after GitHub OAuth: {frontend_url}")
-            return RedirectResponse(
-                url=f"{frontend_url}/?oauth_success=true&integration_id={integration.get('id')}"
+            token_data = await oauth_config.exchange_code_for_tokens(
+                code, redirect_uri, 'github',
+                client_id=creds['client_id'],
+                client_secret=creds['client_secret']
             )
+            logger.info(f"Token exchange response: {token_data}")
+        except Exception as e:
+            logger.error(f"Error exchanging code for tokens: {str(e)}", exc_info=True)
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=token_exchange_failed")
 
-        except Exception as integration_error:
-            logger.error(f"Error creating/updating integration after OAuth: {str(integration_error)}")
-            return RedirectResponse(
-                url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}&warning=integration_failed"
-            )
-    else:
-        return RedirectResponse(
-            url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}"
+        access_token = token_data.get('access_token')
+        if not access_token:
+            logger.error(f"No access_token in token response. Full response: {token_data}")
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=no_access_token")
+
+        # Get user info from GitHub to name the secret
+        try:
+            userinfo = await oauth_config.get_user_info(access_token, 'github')
+            github_username = userinfo.get('login', 'github')
+            logger.info(f"Got GitHub user info: {github_username}")
+        except Exception as e:
+            logger.warning(f"Could not get user info from GitHub: {str(e)}")
+            github_username = 'github'
+
+        secret_repository = PostgreSQLSecretRepository()
+        secret_service = SecretService(secret_repository)
+
+        # Prepare credentials data - use the same credentials that were used for authorization
+        # redirect_uri is NOT saved - it's always fixed in environment variable
+        credentials_data = {
+            'access_token': access_token,
+            'client_id': creds['client_id'],
+            'client_secret': creds['client_secret']
+        }
+
+        secret_data = SecretCreate(
+            name=f"GitHub - {github_username}",
+            service_type='github',
+            datos_secrets=credentials_data
         )
+
+        try:
+            saved_secret = secret_service.create_secret(user_id, secret_data)
+            logger.info(f"Saved GitHub credentials for user {user_id}, secret_id: {saved_secret.id}")
+            secret_id = saved_secret.id
+        except Exception as e:
+            logger.error(f"Error creating secret: {str(e)}", exc_info=True)
+            return RedirectResponse(url=f"{frontend_url}/?oauth_error=secret_creation_failed")
+
+        # Automatically create or update the GitHub integration
+        if secret_id:
+            from src.services.github_service import GitHubService
+            github_service = GitHubService(user_id)
+            integration_service = IntegrationService(user_id)
+
+            try:
+                # Check if user already has a GitHub integration
+                existing_integrations = integration_service.get_integrations('github')
+
+                if existing_integrations and len(existing_integrations) > 0:
+                    # Update existing integration with new secret_id
+                    existing_integration = existing_integrations[0]
+                    integration_id = existing_integration.get('id')
+
+                    logger.info(f"Updating integration {integration_id} with secret_id {secret_id}")
+                    update_data = IntegrationUpdate(secret_id=secret_id)
+                    integration = integration_service.update_integration(integration_id, update_data)
+                else:
+                    # Create new integration
+                    logger.info(f"Creating new GitHub integration for user {user_id} with secret_id {secret_id}")
+                    integration_data = {'credential_id': secret_id}
+                    try:
+                        integration = github_service.create_github_integration(integration_data)
+                        logger.info(f"Successfully created integration {integration.get('id')} for user {user_id}")
+                    except Exception as create_error:
+                        logger.error(f"Error creating integration: {str(create_error)}", exc_info=True)
+                        raise
+
+                logger.info(f"GitHub integration ready: {integration.get('id')} for user {user_id}")
+
+                logger.info(f"Redirecting to frontend after GitHub OAuth: {frontend_url}")
+                return RedirectResponse(
+                    url=f"{frontend_url}/?oauth_success=true&integration_id={integration.get('id')}"
+                )
+
+            except Exception as integration_error:
+                logger.error(f"Error creating/updating integration after OAuth: {str(integration_error)}", exc_info=True)
+                return RedirectResponse(
+                    url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}&warning=integration_failed"
+                )
+        else:
+            logger.warning(f"No secret_id after saving credentials for user {user_id}")
+            return RedirectResponse(
+                url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}"
+            )
+    except Exception as e:
+        logger.error(f"Unexpected error in GitHub callback: {str(e)}", exc_info=True)
+        frontend_url = oauth_config.get_frontend_url(request) if 'frontend_url' not in locals() else frontend_url
+        return RedirectResponse(url=f"{frontend_url}/?oauth_error=unexpected_error")
 
 
 # ============================================================================
@@ -714,28 +812,21 @@ async def authorize_slack(
 ):
     """
     Initiate Slack OAuth flow for Slack integration.
-    Uses credentials from environment variables.
-    Returns the Slack OAuth authorization URL.
+    Uses client_id/client_secret from secrets if available, otherwise from .env
     """
-    if not oauth_config.validate_slack():
-        raise HTTPException(
-            status_code=500,
-            detail="Slack OAuth credentials not configured. Please set SLACK_CLIENT_ID and SLACK_CLIENT_SECRET environment variables."
-        )
-
-    redirect_uri = oauth_config.get_redirect_uri(request, 'slack', 'callback')
-
-    # Build authorization URL
+    creds = oauth_config.get_dynamic_credentials(current_user_id, 'slack')
+    # Always use static redirect URI from environment (fixed, never dynamic)
+    redirect_uri = oauth_config.get_redirect_uri_static('slack', 'callback')
+    if not creds['client_id'] or not creds['client_secret']:
+        raise HTTPException(status_code=500, detail="Slack OAuth client_id/client_secret not configured.")
     params = {
-        'client_id': oauth_config.slack_client_id,
+        'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
         'scope': ','.join(oauth_config.SLACK_SCOPES),
         'state': str(current_user_id)
     }
-
     auth_url = f"{oauth_config.SLACK_AUTH_URL}?{urlencode(params)}"
-    logger.info(f"Generating OAuth URL for Slack integration for user {current_user_id} with redirect_uri: {redirect_uri}")
-
+    logger.info(f"Generating OAuth URL for Slack integration for user {current_user_id} (dynamic client_id)")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
 
@@ -768,11 +859,17 @@ async def slack_callback(
     if not oauth_config.validate_slack():
         return RedirectResponse(url=f"{frontend_url}/?oauth_error=config_error")
 
-    # Exchange code for tokens
-    redirect_uri = oauth_config.get_redirect_uri(request, 'slack', 'callback')
+    # Exchange code for tokens - use same credentials as authorization
+    # Always use static redirect URI from environment (fixed, never dynamic)
+    redirect_uri = oauth_config.get_redirect_uri_static('slack', 'callback')
+    creds = oauth_config.get_dynamic_credentials(user_id, 'slack')
 
     try:
-        token_response = await oauth_config.exchange_code_for_tokens(code, redirect_uri, 'slack')
+        token_response = await oauth_config.exchange_code_for_tokens(
+            code, redirect_uri, 'slack',
+            client_id=creds['client_id'],
+            client_secret=creds['client_secret']
+        )
     except Exception as e:
         logger.error(f"Error exchanging code for tokens: {str(e)}")
         return RedirectResponse(url=f"{frontend_url}/?oauth_error=token_exchange_failed")
@@ -801,12 +898,12 @@ async def slack_callback(
     secret_service = SecretService(secret_repository)
 
     # Prepare credentials data
+    # redirect_uri is NOT saved - it's always fixed in environment variable
     credentials_data = {
         'bot_token': bot_token or access_token,
         'access_token': user_access_token or access_token,
         'client_id': oauth_config.slack_client_id,
         'client_secret': oauth_config.slack_client_secret,
-        'redirect_uri': redirect_uri,
         'team_id': team_info.get('id'),
         'team_name': workspace_name
     }
@@ -870,3 +967,16 @@ async def slack_callback(
         return RedirectResponse(
             url=f"{frontend_url}/?oauth_success=true&secret_id={secret_id}"
         )
+
+
+@router.get("/oauth/redirect-uris")
+async def get_redirect_uris():
+    """
+    Get configured redirect URIs for OAuth providers.
+    Returns the redirect URIs that will be used for each provider.
+    """
+    return {
+        "google": oauth_config.get_redirect_uri_static('google', 'callback'),
+        "github": oauth_config.get_redirect_uri_static('github', 'callback'),
+        "slack": oauth_config.get_redirect_uri_static('slack', 'callback')
+    }

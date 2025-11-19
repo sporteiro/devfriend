@@ -10,6 +10,11 @@ class SecretService:
         self.secret_repository = secret_repository
 
     def create_secret(self, user_id: int, data: SecretCreate) -> SecretResponse:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Creating secret for user {user_id}, service_type={data.service_type}, datos_secrets keys: {list(data.datos_secrets.keys()) if isinstance(data.datos_secrets, dict) else 'not a dict'}")
+        if isinstance(data.datos_secrets, dict) and 'client_id' in data.datos_secrets:
+            logger.debug(f"client_id length: {len(str(data.datos_secrets['client_id']))}, client_secret length: {len(str(data.datos_secrets.get('client_secret', '')))}")
         encrypted_value_str = json.dumps(data.datos_secrets)
         secret = Secret(
             user_id=user_id,

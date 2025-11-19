@@ -120,6 +120,25 @@ class PostgreSQLSecretRepository(SecretRepository):
         finally:
             conn.close()
 
+    def find_all_by_type_decrypted(self, user_id: int, service_type: str) -> List[Secret]:
+        """
+        Find secrets by type with decrypted values (for internal use only, e.g., OAuth).
+        WARNING: This method returns sensitive data. Use only in secure contexts.
+        """
+        conn = self._get_connection()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT * FROM secrets WHERE user_id=%s AND service_type=%s ORDER BY created_at DESC", (user_id, service_type))
+                rows = cursor.fetchall()
+                secrets = []
+                for row in rows:
+                    # Decrypt the value for internal use
+                    row['encrypted_value'] = self.crypto.decrypt(row['encrypted_value'])
+                    secrets.append(Secret(**row))
+                return secrets
+        finally:
+            conn.close()
+
     def delete(self, secret_id: int) -> bool:
         conn = self._get_connection()
         try:
