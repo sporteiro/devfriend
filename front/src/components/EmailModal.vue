@@ -2,6 +2,16 @@
   <div class="email-modal">
     <h2>Email Integration</h2>
 
+    <!-- Informational message about OAuth credentials -->
+    <div class="info-message" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+      <p style="margin: 0; font-size: 0.9em; color: #1565c0;">
+        <strong>OAuth Credentials:</strong> If you have saved GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your credentials, those will be used instead of the environment variables.
+        <span v-if="redirectUri" style="display: block; margin-top: 8px;">
+          <strong>Redirect URI:</strong> <code style="background: white; padding: 2px 6px; border-radius: 3px;">{{ redirectUri }}</code>
+        </span>
+      </p>
+    </div>
+
     <!-- Estado de carga -->
     <div v-if="loading" class="loading-state">
       Checking email integrations...
@@ -182,6 +192,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { secretService } from '../services/secretService';
 import { emailService } from '../services/emailService';
 
@@ -199,12 +210,14 @@ export default {
       connecting: false,
       emails: [],
       showEmailsList: false,
-      loadingEmails: false
+      loadingEmails: false,
+      redirectUri: null
     };
   },
   async mounted() {
     await this.loadEmailIntegrations();
     await this.loadCredentials();
+    await this.loadRedirectUri();
 
     // Check if we just came back from OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
@@ -267,6 +280,15 @@ export default {
         this.credentials = await secretService.listSecrets();
       } catch (error) {
         console.error('Error loading credentials:', error);
+      }
+    },
+
+    async loadRedirectUri() {
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL || 'http://localhost:8888'}/oauth/redirect-uris`);
+        this.redirectUri = response.data.google;
+      } catch (error) {
+        console.error('Error loading redirect URI:', error);
       }
     },
 
