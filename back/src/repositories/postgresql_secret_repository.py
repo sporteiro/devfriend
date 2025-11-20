@@ -11,7 +11,15 @@ from src.utils.fernet_encryption import FernetEncryptionAdapter
 
 
 class PostgreSQLSecretRepository(SecretRepository):
-    def __init__(self, host: str = "postgres", port: int = 5432, database: str = "devfriend", user: str = "devfriend", password: str = "devfriend"):
+
+    def __init__(
+        self,
+        host: str = os.getenv("DB_HOST", "localhost"),
+        port: int = int(os.getenv("DB_PORT", "5432")),
+        database: str = os.getenv("DB_NAME", "devfriend"),
+        user: str = os.getenv("DB_USER", "devfriend"),
+        password: str = os.getenv("DB_PASSWORD", "devfriend")
+    ):
         self.connection_params = {
             'host': host,
             'port': port,
