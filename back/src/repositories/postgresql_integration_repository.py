@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional
 
 import psycopg2
@@ -7,18 +8,19 @@ from psycopg2.extras import RealDictCursor
 class PostgreSQLIntegrationRepository:
     def __init__(
         self,
-        host: str = "postgres",
-        port: int = 5432,
-        database: str = "devfriend",
-        user: str = "devfriend",
-        password: str = "devfriend",
+        host: str = None,
+        port: int = None,
+        database: str = None,
+        user: str = None,
+        password: str = None,
     ):
+        # Usar variables de entorno con valores por defecto para desarrollo
         self.connection_params = {
-            "host": host,
-            "port": port,
-            "database": database,
-            "user": user,
-            "password": password,
+            "host": host or os.getenv("DB_HOST", "localhost"),
+            "port": port or int(os.getenv("DB_PORT", "5432")),
+            "database": database or os.getenv("DB_NAME", "devfriend"),
+            "user": user or os.getenv("DB_USER", "devfriend"),
+            "password": password or os.getenv("DB_PASSWORD", "devfriend"),
         }
         self._create_table()
 
