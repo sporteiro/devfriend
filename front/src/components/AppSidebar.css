@@ -191,7 +191,7 @@
 }
 
 
-/* Responsividad */
+/* Responsiveness */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;

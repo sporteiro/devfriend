@@ -62,7 +62,7 @@ const credentialSchemas = {
 export default {
   name: 'CredentialForm',
   props: {
-    // se puede extender luego a modo edición
+    // Can be extended later for edit mode
   },
   data() {
     return {
@@ -82,7 +82,7 @@ export default {
         this.$toast.error('Complete all required fields');
         return;
       }
-      // Armar el objeto solo con los valores ingresados (los password podrán venir vacíos si no se tocaron en edición)
+      // Build the object only with entered values (passwords may be empty if not touched in edit mode)
       const datos_secrets = {};
       for (const field of this.fields) {
         if (this.form[field.key]) {

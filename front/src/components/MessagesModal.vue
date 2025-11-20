@@ -3,11 +3,11 @@
     <h2>Slack Integration</h2>
 
     <!-- Informational message about OAuth credentials -->
-    <div class="info-message" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
-      <p style="margin: 0; font-size: 0.9em; color: #1565c0;">
+    <div class="info-message">
+      <p>
         <strong>OAuth Credentials:</strong> If you have saved SLACK_CLIENT_ID and SLACK_CLIENT_SECRET in your credentials, those will be used instead of the environment variables.
-        <span v-if="redirectUri" style="display: block; margin-top: 8px;">
-          <strong>Redirect URI:</strong> <code style="background: white; padding: 2px 6px; border-radius: 3px;">{{ redirectUri }}</code>
+        <span v-if="redirectUri" class="redirect-uri">
+          <strong>Redirect URI:</strong> <code>{{ redirectUri }}</code>
         </span>
       </p>
     </div>
@@ -110,10 +110,10 @@
         No Slack integration configured yet.
       </div>
       <div class="actions">
-        <button @click="connectWithOAuth" class="add-btn" :disabled="connecting" style="width: 100%; max-width: 300px; padding: 15px; font-size: 16px;">
+        <button @click="connectWithOAuth" class="add-btn connect-btn-full" :disabled="connecting">
           {{ connecting ? 'Connecting...' : '🔗 Connect with Slack' }}
         </button>
-        <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-secondary);">
+        <p class="connect-info-text">
           Connect using Slack OAuth
         </p>
       </div>
@@ -148,16 +148,15 @@
             </p>
           </div>
 
-          <div class="oauth-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-            <p style="margin-bottom: 10px; font-weight: bold;">Connect with Slack OAuth:</p>
-            <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+          <div class="oauth-option">
+            <p>Connect with Slack OAuth:</p>
+            <p>
               This will automatically create credentials and integration
             </p>
             <button
               @click="connectWithOAuth"
-              class="oauth-btn"
+              class="oauth-btn slack"
               :disabled="connecting"
-              style="width: 100%; padding: 12px; background: #4A154B; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
             >
               {{ connecting ? 'Connecting...' : '🔗 Connect with Slack' }}
             </button>
@@ -294,7 +293,7 @@ export default {
         const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8888';
         const axios = (await import('axios')).default;
 
-        // Esto fallará hasta que crees el backend, pero el frontend está listo
+        // This will fail until the backend is created, but the frontend is ready
         const response = await axios.get(`${API_URL}/auth/slack/authorize`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });

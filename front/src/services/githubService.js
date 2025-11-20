@@ -72,7 +72,7 @@ export const githubService = {
   },
 
   /**
-   * Sincronizar datos de GitHub (forzar actualización)
+   * Sync GitHub data (force update)
    * @param {number} integrationId
    * @returns {Promise<Object>}
    */
