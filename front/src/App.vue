@@ -32,9 +32,9 @@
       @close-sidebar="sidebarOpen = false"
     />
 
-    <!-- Contenido principal -->
+    <!-- Main content -->
     <main class="content">
-      <!-- Header con título y modo oscuro -->
+      <!-- Header with title and dark mode -->
       <div class="content-header">
         <h1 v-if="currentSection === 'notes'">Notes</h1>
         <h1 v-else-if="currentSection === 'emailmodal'">Email</h1>
@@ -82,12 +82,11 @@
           </button>
           <input type="file" id="import-input" ref="importInput" accept="application/json"
               @change="handleImportNotes"
-              style="display: none;"
+              class="hidden-input"
           />
           <button
             @click="$refs.importInput.click()"
             class="export-btn"
-            style="margin-left: 0;"
             title="Import notes from JSON file"
             aria-label="Import notes"
           >
@@ -262,7 +261,7 @@ export default {
     },
     navigateToSection(section) {
       this.currentSection = section;
-      this.sidebarOpen = false; // Cerrar sidebar en móvil
+      this.sidebarOpen = false; // Close sidebar on mobile
       // Reload unread counts when navigating to integration sections
       if (section === 'emailmodal' || section === 'messagesmodal' || section === 'repositorymodal') {
         this.loadUnreadCounts();

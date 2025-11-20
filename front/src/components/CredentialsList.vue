@@ -3,8 +3,8 @@
     <h2>Your Credentials</h2>
 
     <!-- Informational message about OAuth credentials -->
-    <div class="info-message" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
-      <p style="margin: 0; font-size: 0.9em; color: #856404;">
+    <div class="info-message-warning">
+      <p>
         <strong>OAuth Credentials Priority:</strong> When connecting to Gmail, GitHub, or Slack, if you have saved the corresponding CLIENT_ID and CLIENT_SECRET credentials (GOOGLE_CLIENT_ID/SECRET, GITHUB_CLIENT_ID/SECRET, or SLACK_CLIENT_ID/SECRET), those will be used instead of the environment variables. This allows you to use your own OAuth applications.
       </p>
     </div>

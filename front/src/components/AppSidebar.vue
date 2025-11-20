@@ -1,6 +1,6 @@
 <template>
   <aside :class="['sidebar', { open: sidebarOpen }]">
-    <!-- X solo si sidebarOpen y en móvil -->
+    <!-- X only if sidebarOpen and on mobile -->
     <button
       v-if="sidebarOpen"
       class="sidebar-close"

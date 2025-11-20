@@ -1,11 +1,11 @@
-/* Importar estilos compartidos de integración */
+/* Import shared integration styles */
 @import './IntegrationModal.css';
 
 .slack-modal {
   padding: 20px;
 }
 
-/* Lista de mensajes */
+/* Messages list */
 .messages-list {
   margin-top: 20px;
   padding: 20px;

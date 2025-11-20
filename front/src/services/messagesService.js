@@ -72,7 +72,7 @@ export const messagesService = {
   },
 
   /**
-   * Sincronizar datos de Messages/Slack (forzar actualización)
+   * Sync Messages/Slack data (force update)
    * @param {number} integrationId
    * @returns {Promise<Object>}
    */

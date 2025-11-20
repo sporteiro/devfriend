@@ -1,11 +1,11 @@
-/* Importar estilos compartidos de integración */
+/* Import shared integration styles */
 @import './IntegrationModal.css';
 
 .email-modal {
   padding: 20px;
 }
 
-/* Lista de emails */
+/* Email list */
 .emails-list {
   margin-top: 20px;
   padding: 20px;

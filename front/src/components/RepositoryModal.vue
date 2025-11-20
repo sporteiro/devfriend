@@ -3,11 +3,11 @@
     <h2>GitHub Integration</h2>
 
     <!-- Informational message about OAuth credentials -->
-    <div class="info-message" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
-      <p style="margin: 0; font-size: 0.9em; color: #1565c0;">
+    <div class="info-message">
+      <p>
         <strong>OAuth Credentials:</strong> If you have saved GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in your credentials, those will be used instead of the environment variables.
-        <span v-if="redirectUri" style="display: block; margin-top: 8px;">
-          <strong>Redirect URI:</strong> <code style="background: white; padding: 2px 6px; border-radius: 3px;">{{ redirectUri }}</code>
+        <span v-if="redirectUri" class="redirect-uri">
+          <strong>Redirect URI:</strong> <code>{{ redirectUri }}</code>
         </span>
       </p>
     </div>
@@ -127,10 +127,10 @@
         No GitHub integration configured yet.
       </div>
       <div class="actions">
-        <button @click="connectWithOAuth" class="add-btn" :disabled="connecting" style="width: 100%; max-width: 300px; padding: 15px; font-size: 16px;">
+        <button @click="connectWithOAuth" class="add-btn connect-btn-full" :disabled="connecting">
           {{ connecting ? 'Connecting...' : '🔗 Connect with GitHub' }}
         </button>
-        <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-secondary);">
+        <p class="connect-info-text">
           Connect using GitHub OAuth
         </p>
       </div>
@@ -165,30 +165,28 @@
             </p>
           </div>
 
-          <div class="oauth-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-            <p style="margin-bottom: 10px; font-weight: bold;">Connect with GitHub OAuth:</p>
-            <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+          <div class="oauth-option">
+            <p>Connect with GitHub OAuth:</p>
+            <p>
               This will automatically create credentials and integration
             </p>
             <button
               @click="connectWithOAuth"
-              class="oauth-btn"
+              class="oauth-btn github"
               :disabled="connecting"
-              style="width: 100%; padding: 12px; background: #24292e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
             >
               {{ connecting ? 'Connecting...' : '🔗 Connect with GitHub' }}
             </button>
           </div>
-          <div class="pat-option" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-            <p style="margin-bottom: 10px; font-weight: bold;">Or use Personal Access Token:</p>
-            <p style="margin-bottom: 10px; font-size: 0.9em; color: #666;">
+          <div class="pat-option">
+            <p>Or use Personal Access Token:</p>
+            <p>
               Create a GitHub PAT with repo and read:user scopes
             </p>
             <button
               @click="connectWithPAT"
               class="pat-btn"
               :disabled="connecting"
-              style="width: 100%; padding: 12px; background: #586069; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;"
             >
               {{ connecting ? 'Connecting...' : 'Use PAT Instead' }}
             </button>
