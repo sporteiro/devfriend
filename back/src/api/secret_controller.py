@@ -8,19 +8,14 @@ from src.middleware.auth_middleware import get_current_user_id
 from src.models.secret import SecretCreate, SecretResponse
 from src.repositories.postgresql_secret_repository import PostgreSQLSecretRepository
 from src.services.secret_service import SecretService
+from src.utils.get_db_config import GetDBConfig
 
 
 load_dotenv()
 
 router = APIRouter()
+db_config = GetDBConfig().get_db_config()
 
-db_config = {
-    "host": os.getenv("DB_HOST", "postgres"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "devfriend"),
-    "user": os.getenv("DB_USER", "devfriend"),
-    "password": os.getenv("DB_PASSWORD", "devfriend"),
-}
 secret_service = SecretService(PostgreSQLSecretRepository(**db_config))
 
 @router.get("/secrets", response_model=List[SecretResponse])

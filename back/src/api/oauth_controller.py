@@ -18,6 +18,30 @@ from src.services.auth_service import AuthService
 from src.services.email_service import EmailService
 from src.services.integration_service import IntegrationService
 from src.services.secret_service import SecretService
+from src.utils.constants import (
+    BACKEND_URL,
+    FRONTEND_URL,
+    GITHUB_AUTH_URL,
+    GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET,
+    GITHUB_SCOPES,
+    GITHUB_TOKEN_URL,
+    GITHUB_USERINFO_URL,
+    GMAIL_SCOPES,
+    GOOGLE_AUTH_URL,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_TOKEN_URL,
+    GOOGLE_USERINFO_URL,
+    LOGIN_SCOPES,
+    SLACK_AUTH_URL,
+    SLACK_CLIENT_ID,
+    SLACK_CLIENT_SECRET,
+    SLACK_SCOPES,
+    SLACK_TOKEN_URL,
+    SLACK_USERINFO_URL,
+)
+from src.utils.get_db_config import GetDBConfig
 from src.utils.security import create_access_token, hash_password
 
 
@@ -26,60 +50,18 @@ router = APIRouter()
 
 
 class OAuthConfig:
-    """Centralized OAuth configuration and helper methods."""
-
-    # OAuth URLs - Google
-    GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-    GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
-    GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
-
-    # OAuth URLs - GitHub
-    GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize'
-    GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
-    GITHUB_USERINFO_URL = 'https://api.github.com/user'
-
-    # OAuth URLs - Slack
-    SLACK_AUTH_URL = 'https://slack.com/oauth/v2/authorize'
-    SLACK_TOKEN_URL = 'https://slack.com/api/oauth.v2.access'
-    SLACK_USERINFO_URL = 'https://slack.com/api/users.identity'
-
-    # Scopes
-    GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-    LOGIN_SCOPES = [
-        'openid',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-    ]
-    GITHUB_SCOPES = ['repo', 'read:user', 'notifications']
-    SLACK_SCOPES = scopes = [
-        'channels:read',
-        'channels:history',
-        'team:read',
-        'groups:read',
-        'groups:history',
-        'im:history',
-        'mpim:history'
-    ]
-
-    def __init__(self):
-        self.google_client_id = os.getenv('GOOGLE_CLIENT_ID')
-        self.google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
-        self.github_client_id = os.getenv('GITHUB_CLIENT_ID')
-        self.github_client_secret = os.getenv('GITHUB_CLIENT_SECRET')
-        self.slack_client_id = os.getenv('SLACK_CLIENT_ID')
-        self.slack_client_secret = os.getenv('SLACK_CLIENT_SECRET')
 
     def validate_google(self):
         """Check if Google OAuth is configured."""
-        return bool(self.google_client_id and self.google_client_secret)
+        return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
     def validate_github(self):
         """Check if GitHub OAuth is configured."""
-        return bool(self.github_client_id and self.github_client_secret)
+        return bool(GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET)
 
     def validate_slack(self):
         """Check if Slack OAuth is configured."""
-        return bool(self.slack_client_id and self.slack_client_secret)
+        return bool(SLACK_CLIENT_ID and SLACK_CLIENT_SECRET)
 
     def validate(self):
         """Check if OAuth is configured (for backward compatibility - checks Google)."""
@@ -160,7 +142,7 @@ class OAuthConfig:
                 base_url = f"{scheme}://{host}:{port}"
             else:
                 # Default to 8888 for localhost if no port specified
-                base_url = f"http://localhost:8888"
+                base_url = BACKEND_URL
         else:
             # For remote/production, use standard ports or include port if non-standard
             if port and port not in [80, 443]:
@@ -175,14 +157,14 @@ class OAuthConfig:
 
     def get_frontend_url(self, request: Request) -> str:
         """Get frontend URL for redirects."""
-        frontend_url = os.getenv('FRONTEND_URL')
+        frontend_url = FRONTEND_URL
         if frontend_url:
             return frontend_url
 
         scheme = request.url.scheme
         host = request.url.hostname
         if host in ['localhost', '127.0.0.1']:
-            return 'http://localhost:88'
+            return FRONTEND_URL
         return f"{scheme}://{host}"
 
     async def exchange_code_for_tokens(self, code: str, redirect_uri: str, provider: str = 'google', client_id: str = None, client_secret: str = None) -> dict:
@@ -191,11 +173,11 @@ class OAuthConfig:
         If client_id and client_secret are provided, use those; otherwise use environment variables.
         """
         if provider == 'google':
-            cid = client_id or self.google_client_id
-            csec = client_secret or self.google_client_secret
+            cid = client_id or GOOGLE_CLIENT_ID
+            csec = client_secret or GOOGLE_CLIENT_SECRET
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    self.GOOGLE_TOKEN_URL,
+                    GOOGLE_TOKEN_URL,
                     data={
                         'code': code,
                         'client_id': cid,
@@ -207,12 +189,12 @@ class OAuthConfig:
                 response.raise_for_status()
                 return response.json()
         elif provider == 'github':
-            cid = client_id or self.github_client_id
-            csec = client_secret or self.github_client_secret
+            cid = client_id or GITHUB_CLIENT_ID
+            csec = client_secret or GITHUB_CLIENT_SECRET
             logger.info(f"GitHub token exchange: client_id length={len(cid) if cid else 0}, client_secret length={len(csec) if csec else 0}, redirect_uri={redirect_uri}")
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    self.GITHUB_TOKEN_URL,
+                    GITHUB_TOKEN_URL,
                     data={
                         'code': code,
                         'client_id': cid,
@@ -228,11 +210,11 @@ class OAuthConfig:
                     logger.error(f"GitHub token exchange error: {result}")
                 return result
         elif provider == 'slack':
-            cid = client_id or self.slack_client_id
-            csec = client_secret or self.slack_client_secret
+            cid = client_id or SLACK_CLIENT_ID
+            csec = client_secret or SLACK_CLIENT_SECRET
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    self.SLACK_TOKEN_URL,
+                    SLACK_TOKEN_URL,
                     data={
                         'code': code,
                         'client_id': cid,
@@ -250,7 +232,7 @@ class OAuthConfig:
         if provider == 'google':
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    self.GOOGLE_USERINFO_URL,
+                    GOOGLE_USERINFO_URL,
                     headers={'Authorization': f'Bearer {access_token}'}
                 )
                 response.raise_for_status()
@@ -258,7 +240,7 @@ class OAuthConfig:
         elif provider == 'github':
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    self.GITHUB_USERINFO_URL,
+                    GITHUB_USERINFO_URL,
                     headers={
                         'Authorization': f'Bearer {access_token}',
                         'Accept': 'application/vnd.github+json'
@@ -269,7 +251,7 @@ class OAuthConfig:
         elif provider == 'slack':
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    self.SLACK_USERINFO_URL,
+                    SLACK_USERINFO_URL,
                     headers={'Authorization': f'Bearer {access_token}'}
                 )
                 response.raise_for_status()
@@ -305,34 +287,23 @@ class OAuthConfig:
 
         logger.info(f"Using environment variables for {provider}")
         if provider == 'gmail':
-            cid = str(self.google_client_id).strip() if self.google_client_id else None
-            csec = str(self.google_client_secret).strip() if self.google_client_secret else None
+            cid = str(GOOGLE_CLIENT_ID).strip() if GOOGLE_CLIENT_ID else None
+            csec = str(GOOGLE_CLIENT_SECRET).strip() if GOOGLE_CLIENT_SECRET else None
             return {'client_id': cid, 'client_secret': csec}
         elif provider == 'github':
-            cid = str(self.github_client_id).strip() if self.github_client_id else None
-            csec = str(self.github_client_secret).strip() if self.github_client_secret else None
+            cid = str(GITHUB_CLIENT_ID).strip() if GITHUB_CLIENT_ID else None
+            csec = str(GITHUB_CLIENT_SECRET).strip() if GITHUB_CLIENT_SECRET else None
             logger.info(f"Env GitHub credentials: client_id={cid[:10] if cid else None}... (len={len(cid) if cid else 0}), client_secret=*** (len={len(csec) if csec else 0})")
             return {'client_id': cid, 'client_secret': csec}
         elif provider == 'slack':
-            cid = str(self.slack_client_id).strip() if self.slack_client_id else None
-            csec = str(self.slack_client_secret).strip() if self.slack_client_secret else None
+            cid = str(SLACK_CLIENT_ID).strip() if SLACK_CLIENT_ID else None
+            csec = str(SLACK_CLIENT_SECRET).strip() if SLACK_CLIENT_SECRET else None
             return {'client_id': cid, 'client_secret': csec}
         return {'client_id': None, 'client_secret': None}
 
 
 # Initialize config once
 oauth_config = OAuthConfig()
-
-
-def get_db_config():
-    """Get database configuration."""
-    return {
-        "host": os.getenv("DB_HOST", "postgres"),
-        "port": int(os.getenv("DB_PORT", "5432")),
-        "database": os.getenv("DB_NAME", "devfriend"),
-        "user": os.getenv("DB_USER", "devfriend"),
-        "password": os.getenv("DB_PASSWORD", "devfriend"),
-    }
 
 
 @router.get("/auth/google/login")
@@ -353,15 +324,15 @@ async def authorize_google_login(request: Request):
 
     # Build authorization URL for login
     params = {
-        'client_id': oauth_config.google_client_id,
+        'client_id': GOOGLE_CLIENT_ID,
         'redirect_uri': redirect_uri,
-        'scope': ' '.join(oauth_config.LOGIN_SCOPES),
+        'scope': ' '.join(LOGIN_SCOPES),
         'response_type': 'code',
         'access_type': 'offline',
         'prompt': 'consent',
     }
 
-    auth_url = f"{oauth_config.GOOGLE_AUTH_URL}?{urlencode(params)}"
+    auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
     logger.info(f"Generating Google login OAuth URL with redirect_uri: {redirect_uri}")
 
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
@@ -415,7 +386,7 @@ async def google_login_callback(
         return RedirectResponse(url=f"{frontend_url}/?oauth_error=no_email")
 
     # Check if user exists, create if not
-    db_config = get_db_config()
+    db_config = GetDBConfig().get_db_config()
     user_repository = PostgreSQLUserRepository(**db_config)
     auth_service = AuthService(user_repository)
 
@@ -461,13 +432,13 @@ async def authorize_google(
     params = {
         'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
-        'scope': ' '.join(oauth_config.GMAIL_SCOPES),
+        'scope': ' '.join(GMAIL_SCOPES),
         'response_type': 'code',
         'access_type': 'offline',
         'prompt': 'consent',
         'state': str(current_user_id)
     }
-    auth_url = f"{oauth_config.GOOGLE_AUTH_URL}?{urlencode(params)}"
+    auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
     logger.info(f"Generating OAuth URL for Gmail integration for user {current_user_id} (dynamic client_id)")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
@@ -562,8 +533,8 @@ async def google_callback(
     # Prepare credentials data
     # redirect_uri is NOT saved - it's always fixed in environment variable
     credentials_data = {
-        'client_id': oauth_config.google_client_id,
-        'client_secret': oauth_config.google_client_secret,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
         'refresh_token': refresh_token
     }
 
@@ -648,11 +619,11 @@ async def authorize_github(
     params = {
         'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
-        'scope': ' '.join(oauth_config.GITHUB_SCOPES),
+        'scope': ' '.join(GITHUB_SCOPES),
         'state': str(current_user_id),
         'allow_signup': 'true'
     }
-    auth_url = f"{oauth_config.GITHUB_AUTH_URL}?{urlencode(params)}"
+    auth_url = f"{GITHUB_AUTH_URL}?{urlencode(params)}"
     logger.info(f"GitHub OAuth URL for user {current_user_id}: client_id={creds['client_id'][:10]}..., redirect_uri={redirect_uri}")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
@@ -822,10 +793,10 @@ async def authorize_slack(
     params = {
         'client_id': creds['client_id'],
         'redirect_uri': redirect_uri,
-        'scope': ','.join(oauth_config.SLACK_SCOPES),
+        'scope': ','.join(SLACK_SCOPES),
         'state': str(current_user_id)
     }
-    auth_url = f"{oauth_config.SLACK_AUTH_URL}?{urlencode(params)}"
+    auth_url = f"{SLACK_AUTH_URL}?{urlencode(params)}"
     logger.info(f"Generating OAuth URL for Slack integration for user {current_user_id} (dynamic client_id)")
     return {"auth_url": auth_url, "redirect_uri": redirect_uri}
 
@@ -902,8 +873,8 @@ async def slack_callback(
     credentials_data = {
         'bot_token': bot_token or access_token,
         'access_token': user_access_token or access_token,
-        'client_id': oauth_config.slack_client_id,
-        'client_secret': oauth_config.slack_client_secret,
+        'client_id': SLACK_CLIENT_ID,
+        'client_secret': SLACK_CLIENT_SECRET,
         'team_id': team_info.get('id'),
         'team_name': workspace_name
     }

@@ -166,7 +166,7 @@ class TestGitHubControllerReal:
                 "/github/integrations/999/stats",
                 headers={"Authorization": f"Bearer {self.valid_token}"}
             )
-            assert response.status_code == 500
+            assert response.status_code == 404
 
     def test_delete_nonexistent_github_integration_real(self):
         """Real test that tries to delete non-existent integration"""

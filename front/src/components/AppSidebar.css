@@ -40,7 +40,7 @@
   color: #333;
   text-decoration: none;
   margin: 10px 0;
-  font-weight: bold;
+  /* font-weight: bold;*/
   padding: 8px 12px;
   border-radius: 4px;
   transition: background-color 0.2s;
