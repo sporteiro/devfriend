@@ -13,7 +13,6 @@ test('la app carga correctamente', async ({ page }) => {
 });
 
 test('verificar elementos del menú después de carga exitosa', async ({ page }) => {
-  // Primero ejecutar el test de carga
   console.log(`Testeando con PlayWright: ${APP_URL}`);
   await page.goto(APP_URL);
 
@@ -22,7 +21,6 @@ test('verificar elementos del menú después de carga exitosa', async ({ page })
 
   await page.waitForTimeout(2000);
 
-  // Ahora verificar elementos del menú
   const menuItems = ['Notes', 'Email', 'Repository', 'Messages', 'Credentials'];
 
   for (const itemText of menuItems) {
@@ -31,12 +29,10 @@ test('verificar elementos del menú después de carga exitosa', async ({ page })
     console.log(`✓ Elemento del menú "${itemText}" encontrado`);
   }
 
-  // Verificar que el botón de Sign In existe
   const signInButton = page.locator('button:has-text("Sign In")');
   await expect(signInButton).toBeVisible();
   console.log('✓ Botón "Sign In" encontrado');
 
-  // Verificar que hay al menos una nota en la lista
   const noteCards = page.locator('.note-card');
   await expect(noteCards.first()).toBeVisible();
   const noteCount = await noteCards.count();
