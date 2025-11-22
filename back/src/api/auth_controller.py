@@ -7,6 +7,7 @@ from src.middleware.auth_middleware import get_current_user_id
 from src.models.user import UserCreate, UserLogin, UserResponse
 from src.repositories.postgresql_user_repository import PostgreSQLUserRepository
 from src.services.auth_service import AuthService
+from src.utils.get_db_config import GetDBConfig
 
 
 # Load environment variables
@@ -15,13 +16,7 @@ load_dotenv()
 router = APIRouter()
 
 # PostgreSQL configuration from environment variables
-db_config = {
-    "host": os.getenv("DB_HOST", "postgres"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "devfriend"),
-    "user": os.getenv("DB_USER", "devfriend"),
-    "password": os.getenv("DB_PASSWORD", "devfriend"),
-}
+db_config = GetDBConfig().get_db_config()
 
 # Initialize service
 auth_service = AuthService(PostgreSQLUserRepository(**db_config))

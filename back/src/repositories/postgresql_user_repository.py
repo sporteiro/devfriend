@@ -7,6 +7,7 @@ from psycopg2.extras import RealDictCursor
 
 from src.models.user import User
 from src.repositories.user_repository import UserRepository
+from src.utils.get_db_config import GetDBConfig
 
 
 class PostgreSQLUserRepository(UserRepository):
@@ -23,13 +24,13 @@ class PostgreSQLUserRepository(UserRepository):
         user: str = None,
         password: str = None,
     ):
-        # Usar variables de entorno con valores por defecto para desarrollo
+        base_config = GetDBConfig().get_db_config()
         self.connection_params = {
-            "host": host or os.getenv("DB_HOST", "localhost"),
-            "port": port or int(os.getenv("DB_PORT", "5432")),
-            "database": database or os.getenv("DB_NAME", "devfriend"),
-            "user": user or os.getenv("DB_USER", "devfriend"),
-            "password": password or os.getenv("DB_PASSWORD", "devfriend"),
+            "host": host or base_config["host"],
+            "port": port or base_config["port"],
+            "database": database or base_config["database"],
+            "user": user or base_config["user"],
+            "password": password or base_config["password"],
         }
         self._create_table()
 

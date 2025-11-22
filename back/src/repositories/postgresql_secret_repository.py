@@ -8,24 +8,26 @@ from psycopg2.extras import RealDictCursor
 from src.models.secret import Secret
 from src.repositories.secret_repository import SecretRepository
 from src.utils.fernet_encryption import FernetEncryptionAdapter
+from src.utils.get_db_config import GetDBConfig
 
 
 class PostgreSQLSecretRepository(SecretRepository):
 
     def __init__(
         self,
-        host: str = os.getenv("DB_HOST", "localhost"),
-        port: int = int(os.getenv("DB_PORT", "5432")),
-        database: str = os.getenv("DB_NAME", "devfriend"),
-        user: str = os.getenv("DB_USER", "devfriend"),
-        password: str = os.getenv("DB_PASSWORD", "devfriend")
+        host: str = None,
+        port: int = None,
+        database: str = None,
+        user: str = None,
+        password: str = None
     ):
+        base_config = GetDBConfig().get_db_config()
         self.connection_params = {
-            'host': host,
-            'port': port,
-            'database': database,
-            'user': user,
-            'password': password
+            'host': host or base_config['host'],
+            'port': port or base_config['port'],
+            'database': database or base_config['database'],
+            'user': user or base_config['user'],
+            'password': password or base_config['password']
         }
         self.crypto = FernetEncryptionAdapter()
         self._create_table()
