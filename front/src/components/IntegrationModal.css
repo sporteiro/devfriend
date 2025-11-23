@@ -192,7 +192,8 @@
 }
 
 .add-btn {
-  color: #4eacff;
+  color: #ffffff;
+  background-color: #095633;
   border: none;
   padding: 12px 24px;
   border-radius: 6px;
@@ -204,7 +205,8 @@
 }
 
 .add-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
+  color: #ffffff;
+  background-color: #009652;
 }
 
 .add-btn:disabled {
