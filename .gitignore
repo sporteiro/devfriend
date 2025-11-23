@@ -210,3 +210,4 @@ key.pem
 notes_devfriend
 notes_devfriend
 .TFG
+playwright/test-results/.last-run.json

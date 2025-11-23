@@ -28,6 +28,12 @@ async def create_secret(data: SecretCreate, user_id: int = Depends(get_current_u
     """Create a new credential/secret for the authenticated user."""
     return secret_service.create_secret(user_id, data)
 
+@router.get("/secrets/get-decryptable")
+async def get_decryptable_decrypted_secrets(user_id: int = Depends(get_current_user_id)):
+    repo = PostgreSQLSecretRepository()
+    secrets = repo.find_all_by_type_decrypted(user_id, "custom")
+    return secrets
+
 @router.get("/secrets/{secret_id}", response_model=SecretResponse)
 async def get_secret(secret_id: int, user_id: int = Depends(get_current_user_id)):
     """Get details (metadata only, never the secret in plain text)."""

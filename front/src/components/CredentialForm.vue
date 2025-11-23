@@ -1,6 +1,13 @@
 <template>
   <div class="cred-form">
     <h3>Add Credential</h3>
+    <div class="info-message">
+      <p>
+        <strong>Custom Secrets:</strong> In addition to pre-configured services, you can create custom secrets
+        to store any API keys, tokens, or sensitive data. All secrets are stored encrypted for security,
+        but custom secrets can be decrypted for viewing when explicitly requested from the credentials list.
+      </p>
+    </div>
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
         <label>Service</label>
@@ -9,6 +16,7 @@
           <option value="github">GitHub</option>
           <option value="gmail">Gmail</option>
           <option value="slack">Slack</option>
+          <option value="custom">Custom Secret</option>
         </select>
       </div>
       <div class="form-group">
@@ -56,6 +64,9 @@ const credentialSchemas = {
     { key: 'bot_token', label: 'Bot Token', secret: true, placeholder: '', },
     { key: 'app_id', label: 'App ID', secret: false, placeholder: '', },
     { key: 'signing_secret', label: 'Signing Secret', secret: true, placeholder: '', },
+  ],
+  custom: [
+    { key: 'custom_secret', label: 'Custom Key', secret: false, placeholder: '', },
   ],
 };
 
@@ -105,3 +116,4 @@ export default {
 </script>
 
 <style scoped src="./CredentialsList.css"></style>
+<style scoped src="../App.css"></style>

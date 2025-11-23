@@ -34,4 +34,10 @@ export const secretService = {
     });
     return true;
   },
+  async getDecryptableSecrets() {
+    console.log("ACA", getAuthHeaders())
+    const response = await axios.get(`${API_URL}/secrets/get-decryptable`, { headers: getAuthHeaders() });
+    console.log(response.data)
+    return response.data;
+  },
 };

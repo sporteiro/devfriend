@@ -361,3 +361,32 @@ html, body {
   .app-container .mobile-header { display: flex !important; }
   .app-container .mobile-header[style*='display: none'] { display:none !important; }
 }
+
+.margin-left {
+  margin-left: 5px;
+}
+
+.cred-form .cancel-btn {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.cred-form .cancel-btn:hover {
+  background: #a93226;
+}
+
+.dark .cred-form .cancel-btn {
+  background: #a43c2d;
+  color: #fff;
+}
+
+.dark .cred-form .cancel-btn:hover {
+  background: #8e2a1f;
+}
