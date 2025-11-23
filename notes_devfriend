@@ -3,3 +3,12 @@ Install fastAPI
 python3 -m venv venv3 && source venv3/bin/activate && pip install -r requirements.txt
 
 docker-compose run --rm back python -m pytest tests/integrations/test_slack_connection.py -v -s
+npx playwright test tests --headed --timeout=0
+
+docker run -d \
+  --name pgadmin_devfriend \
+  -p 8880:80 \
+  -e PGADMIN_DEFAULT_EMAIL=admin@example.com \
+  -e PGADMIN_DEFAULT_PASSWORD=supersecret \
+  -v pgadmin_data_devfriend:/var/lib/pgadmin \
+  dpage/pgadmin4
