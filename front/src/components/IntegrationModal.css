@@ -192,8 +192,7 @@
 }
 
 .add-btn {
-  background: var(--accent-color);
-  color: white;
+  color: #4eacff;
   border: none;
   padding: 12px 24px;
   border-radius: 6px;
