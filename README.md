@@ -3,9 +3,9 @@
 
   # DevFriend
 
-  **Task management and resources access for software developers**
+  **A secure manager for notes, integrations, and developer secrets**
 
-  A modern web application for managing notes and developer resources, built with clean architecture principles.
+  DevFriend is a modern web app for managing user notes, OAuth-based external integrations (Gmail, GitHub, Slack), and encrypted secrets, designed following Hexagonal/Clean Architecture principles.
 
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.113+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
   [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vue.js)](https://vuejs.org/)
@@ -16,7 +16,6 @@
 ---
 
 ## 📋 Table of Contents
-
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
@@ -28,331 +27,171 @@
 ---
 
 ## ✨ Features
-
-- 📝 **Note Management**: Create, read, update, and delete notes
-- 🌙 **Dark Mode**: Built-in theme switcher
-- 🎨 **Modern UI**: Clean and responsive interface
-- 🔒 **Secure**: PostgreSQL database with proper connection management
-- 🚀 **Fast**: Built with FastAPI and Vue.js for optimal performance
-- 📱 **Responsive**: Works seamlessly on desktop and mobile devices
+- 📝 **Notes**: Full CRUD on personal notes (Markdown supported)
+- 🔒 **Secrets Management**: Store OAuth/API credentials securely, encrypted with Fernet per user
+- 🔑 **OAuth Integrations**:
+    - Gmail: list and sync emails
+    - GitHub: list repos, user profile, sync, notification count
+    - Slack: (via "messages" API) list and sync channels and messages
+- 👤 **Strong Auth**: JWT-based login with protected endpoints
+- 🌙 **Dark Mode**: Built-in, toggleable
+- 🎨 **Modern UI/UX**: Vue 3, responsive, desktop/mobile
+- 🧪 **Real Testing**: Pytest coverage (backend controllers/services), Playwright E2E (frontend/UI)
+- 🛡️ **Docker**: One-line start (frontend, backend, db) via Docker Compose
 
 ---
 
 ## 🏗️ Architecture
+DevFriend uses real Hexagonal Architecture (Ports & Adapters):
+- Strong separation: Domain, Application, Adapters (API, DB, OAuth, etc.)
+- All business logic is infra-agnostic & fully tested
+- PostgreSQL data source via repository adapters (non-coupled)
+- Vue3 SPA frontend isolated from API
+- Integrations are service-driven, supporting extension
 
-DevFriend follows **Hexagonal Architecture** (Ports and Adapters) principles, ensuring:
-
-- **Independence from frameworks**: Business logic doesn't depend on external frameworks
-- **Testability**: Easy to test without infrastructure dependencies
-- **Flexibility**: Simple to swap implementations (e.g., SQLite to PostgreSQL)
-- **Clear separation of concerns**: Each layer has a single responsibility
-
-### Architecture Diagram
-
+### Architecture Overview
 ```mermaid
-graph TB
-    subgraph "Frontend - Vue.js"
-        UI[UI Components]
-        NoteForm[NoteForm.vue]
-        NoteList[NoteList.vue]
-        AppVue[App.vue]
-        NoteServiceJS[noteService.js<br/>HTTP Adapter]
-    end
-
-    subgraph "Backend - FastAPI"
-        subgraph "Primary Adapters<br/>(Driving/Input)"
-            API[note_controller.py<br/>REST API]
-        end
-
-        subgraph "Application Layer"
-            Service[NoteService<br/>Use Cases]
-        end
-
-        subgraph "Domain Layer"
-            Domain[Note<br/>Entity]
-        end
-
-        subgraph "Ports"
-            Port[NoteRepository<br/>Interface]
-        end
-
-        subgraph "Secondary Adapters<br/>(Driven/Output)"
-            PostgreSQLAdapter[PostgreSQLNoteRepository<br/>PostgreSQL Adapter]
-        end
-
-        subgraph "Infrastructure"
-            DB[(PostgreSQL DB)]
-        end
-    end
-
-    UI --> NoteForm
-    UI --> NoteList
-    NoteForm --> AppVue
-    NoteList --> AppVue
-    AppVue --> NoteServiceJS
-    NoteServiceJS -->|HTTP REST| API
-    API --> Service
-    Service --> Domain
-    Service --> Port
-    Port <-.implements.-> PostgreSQLAdapter
-    PostgreSQLAdapter --> DB
-
-    style Domain fill:#90EE90
-    style Port fill:#FFD700
-    style Service fill:#87CEEB
-    style API fill:#FFA07A
-    style PostgreSQLAdapter fill:#FFA07A
-    style DB fill:#DDA0DD
-    style NoteServiceJS fill:#FFA07A
+graph TD
+    Front[Vue.js SPA]
+    API[REST API (FastAPI)]
+    Services[Services Layer]
+    Domain[Entities/Models]
+    Repo[Repository + PostgreSQL Adapter]
+    DB[(PostgreSQL)]
+    Front -->|HTTP JWT| API
+    API --> Services --> Domain
+    Services --> Repo --> DB
 ```
-
-### Layers
-
-#### **Core (Business Logic)**
-- **Domain**: `Note` entity with business rules
-- **Application**: `NoteService` orchestrates use cases
-
-#### **Ports**
-- `NoteRepository`: Interface defining persistence contract
-
-#### **Adapters**
-- **Primary (Input)**: `note_controller.py` - REST API adapter
-- **Secondary (Output)**: `PostgreSQLNoteRepository` - PostgreSQL implementation
 
 ---
 
 ## 🛠️ Tech Stack
+**Backend:**
+- Python 3.12+, FastAPI, Pydantic v2
+- PostgreSQL 15+, psycopg2
+- JWT/Bcrypt, cryptography/Fernet
+- Google, GitHub, Slack API clients
+- Pytest (unit/integration)
 
-### Backend
-- **[FastAPI](https://fastapi.tiangolo.com/)**: Modern Python web framework
-- **[Pydantic](https://pydantic-docs.helpmanual.io/)**: Data validation
-- **[psycopg2](https://www.psycopg.org/)**: PostgreSQL adapter
-- **[python-dotenv](https://github.com/theskumar/python-dotenv)**: Environment variables management
+**Frontend:**
+- Vue.js 3 (Composition API)
+- Axios, Vue CLI tooling
+- Playwright E2E
+- Custom CSS3 (dark/light)
 
-### Frontend
-- **[Vue.js 3](https://vuejs.org/)**: Progressive JavaScript framework
-- **[Vue CLI](https://cli.vuejs.org/)**: Standard tooling
-- **CSS3**: Custom styling with dark mode support
-
-### Database
-- **[PostgreSQL 15](https://www.postgresql.org/)**: Robust relational database
-
-### DevOps
-- **[Docker](https://www.docker.com/)**: Containerization
-- **[Docker Compose](https://docs.docker.com/compose/)**: Multi-container orchestration
-- **[Render](https://render.com/)**: Cloud deployment platform
+**DevOps:**
+- Docker Compose
 
 ---
 
 ## 🚀 Getting Started
+**Prerequisites:** Docker & Docker Compose, Node 16+ (for frontend/dev), Python 3.12+ (if backend runs locally/not in Docker only).
 
-### Prerequisites
-
-- Docker & Docker Compose
-- Git
-- Python 3 (for generating encryption keys)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/devfriend.git
-   cd devfriend
-   ```
-
-2. **Configure environment variables**
-
-   Copy the example file (it already contains a working encryption key):
-   ```bash
-   cd back
-   cp .env.example .env
-   ```
-
-   The `.env.example` file contains all required variables with working values for local development.
-
-3. **Start the application**
-   ```bash
-   docker compose up --build
-   ```
-
-   The database schema will be automatically initialized from `db_schema.sql` when PostgreSQL starts for the first time.
-
-4. **Access the application**
-   - Frontend: http://localhost:88
-   - Backend API: http://localhost:8888
-   - API Docs: http://localhost:8888/docs
-
-### Local Development
-
-#### Backend
+**Quick start with Docker (recommended):**
 ```bash
-cd back
-pip install -r requirements.txt
-uvicorn src.main:app --reload --port 8888
+git clone <YOUR_REPO_URL>
+cd devFriend
+cd back && cp .env.example .env && cd ..
+docker compose up --build
 ```
+- Frontend: http://localhost:88
+- Backend: https://localhost:8888
+- API Docs (Swagger): https://localhost:8888/docs
 
-#### Frontend
-```bash
-cd front
-npm install
-npm run serve -- --port 88
-```
+**Local Development:**
+- Backend: `cd back && pip install -r requirements.txt && uvicorn src.main:app --reload --port 8888`
+- Frontend: `cd front && npm install && npm run serve -- --port 88`
+- Testing backend: `cd back && pytest`
+- Testing frontend: `cd playwright && yarn install && yarn test`
 
 ---
 
 ## 📁 Project Structure
-
 ```
-devfriend/
-├── back/                           # Backend (FastAPI)
+devFriend/
+├── back/
 │   ├── src/
-│   │   ├── api/                   # Primary adapters (REST API)
-│   │   │   └── note_controller.py
-│   │   ├── models/                # Domain entities
-│   │   │   └── note.py
-│   │   ├── repositories/          # Ports & Secondary adapters
-│   │   │   ├── note_repository.py # Port (interface)
-│   │   │   └── postgresql_repository.py # Adapter
-│   │   ├── services/              # Application layer (use cases)
-│   │   │   └── note_service.py
-│   │   └── main.py                # FastAPI app entry point
+│   │   ├── api/                # REST controllers: auth, notes, secrets, integrations, etc.
+│   │   ├── models/             # Pydantic models: User, Note, Secret, Integration...
+│   │   ├── repositories/       # Abstractions + adapters (PostgreSQL, ABCs)
+│   │   ├── services/           # Business/services logic: Auth, Note, Secret, OAuth...
+│   │   ├── middleware/         # JWT/CORS
+│   │   ├── utils/              # Enc/dec, OAuth client helpers
+│   │   └── main.py             # FastAPI entrypoint
+│   ├── tests/                  # Pytest unit/integration tests
+│   ├── requirements.txt
 │   ├── Dockerfile
-│   └── requirements.txt
-│
-├── front/                          # Frontend (Vue.js)
+├── front/
 │   ├── src/
-│   │   ├── components/            # Vue components
-│   │   │   ├── AppSidebar.vue
-│   │   │   ├── NoteForm.vue
-│   │   │   └── NoteList.vue
-│   │   ├── services/              # HTTP adapters
-│   │   │   └── noteService.js
-│   │   ├── assets/                # Static assets
-│   │   │   ├── logo.png
-│   │   │   └── darkmode.png
+│   │   ├── components/         # Vue UI modules
+│   │   ├── services/           # JS API adapters (auth, notes, secrets, Gmail, GitHub, Slack)
+│   │   ├── assets/
 │   │   ├── App.vue
 │   │   └── main.js
+│   ├── public/
+│   ├── package.json
 │   ├── Dockerfile
-│   └── package.json
-│
-├── docker-compose.yml              # Multi-container setup
-├── diagrams.md                     # Architecture diagrams
-└── README.md
+├── playwright/
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── package.json
+├── db_schema.sql
+├── docker-compose.yml
+├── README.md
 ```
+
+## Launch all python tests
+docker-compose run --rm back python -m pytest  -v -s
+## Launch PlayWright tests (local)
+npx playwright test tests --headed --timeout=0
 
 ---
 
 ## 🌐 Deployment
+### Docker Compose (Local/Dev, recommended):
+All stack runs with one command (`docker compose up --build`). Default environment is local/dev (`.env.example` is enough).
 
-DevFriend is deployed on [Render](https://render.com/):
+**Environment Variables (Backend):**
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `DEVFRIEND_ENCRYPTION_KEY` (Fernet, required)
+- `FRONTEND_URL`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+- `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` (optional)
+- `JWT_SECRET_KEY` (optionally override default)
 
-- **Frontend**: https://devfriend.onrender.com
-- **Backend**: https://devfriend-back.onrender.com
-
-### Deploy Your Own
-
-#### 1. **Database Setup**
-Create a PostgreSQL instance (Render, AWS RDS, or any PostgreSQL provider) and note the connection details.
-
-#### 2. **Backend Environment Variables**
-Configure these environment variables in your hosting platform:
-
-**Required:**
+**DB Schema:** Automatically set up by Docker, or init manually:
 ```bash
-# Database Configuration (use your production database)
-DB_HOST=your-production-db-host
-DB_PORT=5432
-DB_NAME=devfriend
-DB_USER=your-db-user
-DB_PASSWORD=your-db-password
-
-# Encryption Key (REQUIRED - generate a NEW one for production!)
-# Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-DEVFRIEND_ENCRYPTION_KEY=your-production-encryption-key
-
-# Frontend URL (REQUIRED for OAuth redirects)
-FRONTEND_URL=https://your-frontend-domain.com
-
-# Google OAuth (Required for Gmail integration and Google login)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-
-# JWT Secret (Optional - defaults to "dev-secret-key-change-in-production")
-# Generate a secure random string for production
-JWT_SECRET_KEY=your-secure-jwt-secret-key
+psql -h <host> -U <user> -d devfriend -f db_schema.sql
 ```
 
-**Backend Deployment:**
-- Platform: Render, Railway, Heroku, AWS, etc.
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+## Example of usage of pgadmin dockerized
+docker run -d \
+  --name pgadmin_devfriend \
+  -p 8880:80 \
+  -e PGADMIN_DEFAULT_EMAIL=admin@example.com \
+  -e PGADMIN_DEFAULT_PASSWORD=supersecret \
+  -v pgadmin_data_devfriend:/var/lib/pgadmin \
+  dpage/pgadmin4
 
-#### 3. **Frontend Environment Variables**
-Create a `.env.production` file in the `front/` directory:
+**Cloud:** Supports Render.com, Railway, Heroku, or any infra supporting Docker Compose and the above ENV variables. Set up OAuth redirect URIs per provider.
 
-```bash
-VUE_APP_API_URL=https://your-backend-domain.com
-```
-
-**Frontend Deployment:**
-- Build command: `npm install && npm run build`
-- Publish directory: `dist`
-- Make sure to set `VUE_APP_API_URL` as an environment variable during build
-
-#### 4. **Google Cloud Console Configuration**
-⚠️ **CRITICAL**: You must configure these redirect URIs in [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
-
-1. Go to **APIs & Services** → **Credentials**
-2. Edit your OAuth 2.0 Client ID
-3. Add these **Authorized redirect URIs**:
-   - `https://your-backend-domain.com/auth/google/callback` (for Gmail integration)
-   - `https://your-backend-domain.com/auth/google/login/callback` (for Google login)
-4. **Enable Gmail API** in the APIs & Services section
-5. If your app is in "Testing" mode, add test users or publish it for production use
-
-#### 5. **Security Checklist**
-- ✅ Generate a **new** `DEVFRIEND_ENCRYPTION_KEY` for production (don't use the one from `.env.example`)
-- ✅ Set a secure `JWT_SECRET_KEY` (if not using default)
-- ✅ Use strong database passwords
-- ✅ Enable HTTPS (required for OAuth)
-- ✅ Keep `.env` files out of version control
-- ✅ Use environment variables, not hardcoded values
-
-#### 6. **Database Initialization**
-The database schema will be automatically initialized from `db_schema.sql` if you're using Docker. For managed databases, you may need to run the schema manually:
-```bash
-psql -h your-db-host -U your-db-user -d devfriend -f db_schema.sql
-```
-
----
-
-## 📊 Database Schema
-
-```sql
-CREATE TABLE notes (
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    content TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Security Notes
+- All sensitive data is Fernet-encrypted per user
+- No secrets or keys in frontend code/repo
+- JWT auth for all sensitive endpoints
+- `.env` MUST NOT be versioned for production
+- HTTPS required for OAuth in prod
 
 ---
 
 ## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  Made with ❤️ for developers by developers
+  Made with ❤️ for developers
 
   **[Report Bug](https://github.com/yourusername/devfriend/issues)** · **[Request Feature](https://github.com/yourusername/devfriend/issues)**
 </div>

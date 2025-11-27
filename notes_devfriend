@@ -3,6 +3,8 @@ Install fastAPI
 python3 -m venv venv3 && source venv3/bin/activate && pip install -r requirements.txt
 
 docker-compose run --rm back python -m pytest tests/integrations/test_slack_connection.py -v -s
+docker-compose run --rm back python -m pytest  -v -s
+
 npx playwright test tests --headed --timeout=0
 
 docker run -d \
