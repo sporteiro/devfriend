@@ -13,26 +13,32 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install dependencies (safe)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          # prefer back/requirements.txt, fall back to root requirements.txt, or skip installing them
+          if [ -f back/requirements.txt ]; then
+            pip install -r back/requirements.txt
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements file found; continuing without -r"
+          fi
           pip install flake8 black pytest
 
       - name: Run Flake8 (Code Linter)
         run: |
           flake8 .
-          
+
       - name: Run Black (Code Formatter)
         run: |
           black --check .
@@ -43,18 +49,30 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install dependencies (safe)
         run: |
           python -m pip install --upgrade pip
-          pip install -r back/requirements.txt
-          pip install pytest
+          if [ -f back/requirements.txt ]; then
+            pip install -r back/requirements.txt
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements file found; installing pytest only"
+            pip install pytest
+          fi
+          # ensure pytest is available
+          pip install --upgrade pytest
 
       - name: Run Pytest
         run: |
+          # if tests live in back/, run them there; otherwise run from repo root
+          if [ -d back ] && [ -f back/pyproject.toml ] || [ -f back/setup.cfg ] || [ -f back/requirements.txt ]; then
+            cd back || true
+          fi
           pytest --maxfail=1 --disable-warnings -q
