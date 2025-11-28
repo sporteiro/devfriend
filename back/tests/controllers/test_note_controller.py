@@ -1,16 +1,21 @@
-import os
 import pytest
+import os
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 import jwt
 from datetime import datetime, timedelta
+from src.api.note_controller import router as note_router
+from tests.test_utils import requires_real_db
 
 from src.main import app
 from src.utils.security import SECRET_KEY, ALGORITHM
 
 client = TestClient(app)
 
-if os.getenv('PYTEST_USE_REAL_DB') != '1':
-    pytest.skip('Test requires real database: set PYTEST_USE_REAL_DB=1 to run', allow_module_level=True)
+pytestmark = pytest.mark.skipif(
+    requires_real_db(),
+    reason='Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)'
+)
 
 class TestNoteControllerReal:
 

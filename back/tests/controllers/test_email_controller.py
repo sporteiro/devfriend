@@ -1,20 +1,21 @@
 import pytest
+from tests.test_utils import requires_real_db
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
+import os
 import jwt
 from datetime import datetime, timedelta
-import os
+from src.api.email_controller import router as email_router
 
 pytestmark = pytest.mark.skipif(
-    os.getenv('PYTEST_USE_REAL_DB') != '1',
-    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+    requires_real_db(),
+    reason='Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)'
 )
 
 # Create minimal test app
 app = FastAPI()
 
 # Import only the email-related routers
-from src.api.email_controller import router as email_router
 app.include_router(email_router)
 
 # Import real SECRET_KEY and ALGORITHM

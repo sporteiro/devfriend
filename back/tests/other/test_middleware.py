@@ -1,19 +1,26 @@
-import os
 import pytest
+from tests.test_utils import requires_real_db
+import os
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import jwt
 from datetime import datetime, timedelta
+from src.api.auth_controller import router as auth_router
+
+pytestmark = pytest.mark.skipif(
+    requires_real_db(),
+    reason='Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)'
+)
 
 # Create minimal test app
 app = FastAPI()
 
 # Import only the auth router
-from src.api.auth_controller import router as auth_router
 app.include_router(auth_router)
 
 # Import real SECRET_KEY and ALGORITHM
 from src.utils.security import SECRET_KEY, ALGORITHM
+
 
 client = TestClient(app)
 

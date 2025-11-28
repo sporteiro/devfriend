@@ -1,18 +1,21 @@
 import pytest
+from tests.test_utils import requires_real_db
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
+import os
 import jwt
 from datetime import datetime, timedelta
-import os
+from src.api.integration_controller import router as integration_router
 
-if os.getenv('PYTEST_USE_REAL_DB') != '1':
-    pytest.skip('Test requires real database: set PYTEST_USE_REAL_DB=1 to run', allow_module_level=True)
+pytestmark = pytest.mark.skipif(
+    requires_real_db(),
+    reason='Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)'
+)
 
 # Create minimal test app
 app = FastAPI()
 
 # Import the integration router
-from src.api.integration_controller import router as integration_router
 app.include_router(integration_router)
 
 # Import real SECRET_KEY and ALGORITHM
