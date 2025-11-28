@@ -2,11 +2,17 @@ import pytest
 from fastapi.testclient import TestClient
 import jwt
 from datetime import datetime, timedelta
+import os
 
 from src.main import app
 from src.utils.security import SECRET_KEY, ALGORITHM
 
 client = TestClient(app)
+
+pytestmark = pytest.mark.skipif(
+    os.getenv('PYTEST_USE_REAL_DB') != '1',
+    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+)
 
 class TestGitHubControllerReal:
 

@@ -3,6 +3,12 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import jwt
 from datetime import datetime, timedelta
+import os
+
+pytestmark = pytest.mark.skipif(
+    os.getenv('PYTEST_USE_REAL_DB') != '1',
+    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+)
 
 # Create minimal test app
 app = FastAPI()
