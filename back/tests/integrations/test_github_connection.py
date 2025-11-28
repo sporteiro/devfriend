@@ -29,6 +29,12 @@ TEST_GITHUB_CREDENTIALS = {
 TEST_GITHUB_TOKEN = os.getenv('GITHUB_ACCESS_TOKEN', '')
 
 
+pytestmark = pytest.mark.skipif(
+    os.getenv('PYTEST_USE_REAL_DB') != '1',
+    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+)
+
+
 def test_github_oauth_connection():
     """
     Test GitHub OAuth credentials and endpoints.

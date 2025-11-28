@@ -23,6 +23,12 @@ TEST_SLACK_CHANNEL_ID = 'C07Q85NBKQE'
 TEST_SLACK_ACCESS_TOKEN = os.getenv('SLACK_ACCESS_TOKEN', 'xoxe.xoxb-1-MS0yLTc4NTM1OTY0MTA1MjgtOTkzMjUzMTI2ODE4Mi05OTI5MjcwNzIwNzU1LTk5MzIyMTY2NTk1MDktZmMwNDE4MmZjMGQwMzU4MjE3YzAyNDY0ZjEwYzc4N2QwYmEzN2Y0OWQ5Nzc2YmYzMjgzNGI5OTNmY2I4ODJjYg')
 
 
+pytestmark = pytest.mark.skipif(
+    os.getenv('PYTEST_USE_REAL_DB') != '1',
+    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+)
+
+
 def test_slack_oauth_configuration():
     """
     Test that Slack OAuth configuration is properly set up.

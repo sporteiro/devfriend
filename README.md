@@ -104,6 +104,20 @@ docker compose up --build
 - Testing backend: `cd back && pytest`
 - Testing frontend: `cd playwright && yarn install && yarn test`
 
+## ⚠️ Database-dependent tests & CI
+Some backend tests require a running PostgreSQL instance and will attempt to connect at import time! To prevent CI and local runs without a DB from crashing, these test files include, at the top:
+
+```python
+import os
+import pytest
+if os.getenv("PYTEST_USE_REAL_DB") != "1":
+    pytest.skip("Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)", allow_module_level=True)
+```
+
+- If `PYTEST_USE_REAL_DB` is not set to `1`, all integration tests that need the database are skipped on test collection, so CI never fails on missing/invalid connections.
+- To run DB-dependent tests locally, be sure to start your development DB and then set the env variable `PYTEST_USE_REAL_DB=1` before running pytest.
+- Unit tests (not requiring DB) always run regardless of this flag.
+
 ---
 
 ## 📁 Project Structure
