@@ -1,5 +1,8 @@
-import pytest
 import os
+import pytest
+if os.getenv("PYTEST_USE_REAL_DB") != "1":
+    pytest.skip("Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)", allow_module_level=True)
+
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import jwt

@@ -1,8 +1,11 @@
+import os
 import pytest
+if os.getenv("PYTEST_USE_REAL_DB") != "1":
+    pytest.skip("Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)", allow_module_level=True)
+
 from tests.test_utils import requires_real_db
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
-import os
 import jwt
 from datetime import datetime, timedelta
 from src.api.secret_controller import router as secret_router

@@ -1,11 +1,14 @@
-import pytest
-from tests.test_utils import requires_real_db
 import os
-from fastapi.testclient import TestClient
+import pytest
+if os.getenv("PYTEST_USE_REAL_DB") != "1":
+    pytest.skip("Requires a real PostgreSQL database (set PYTEST_USE_REAL_DB=1)", allow_module_level=True)
+
+from tests.test_utils import requires_real_db
 import jwt
-from datetime import datetime, timedelta
+from fastapi.testclient import TestClient
 from src.main import app
 from src.utils.security import SECRET_KEY, ALGORITHM
+from datetime import datetime, timedelta
 
 pytestmark = pytest.mark.skipif(
     requires_real_db(),
