@@ -5,10 +5,8 @@ import jwt
 from datetime import datetime, timedelta
 import os
 
-pytestmark = pytest.mark.skipif(
-    os.getenv('PYTEST_USE_REAL_DB') != '1',
-    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
-)
+if os.getenv('PYTEST_USE_REAL_DB') != '1':
+    pytest.skip('Test requires real database: set PYTEST_USE_REAL_DB=1 to run', allow_module_level=True)
 
 # Create minimal test app
 app = FastAPI()
