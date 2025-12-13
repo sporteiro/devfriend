@@ -29,6 +29,12 @@ TEST_OAUTH_CREDENTIALS = {
 TEST_REFRESH_TOKEN = os.getenv('GOOGLE_REFRESH_TOKEN', '')
 
 
+pytestmark = pytest.mark.skipif(
+    os.getenv('PYTEST_USE_REAL_DB') != '1',
+    reason='Test requiere base de datos real (PYTEST_USE_REAL_DB=1)'
+)
+
+
 def test_google_oauth_connection():
     """
     Test connection to Google OAuth using client_id and client_secret (without refresh_token).
