@@ -422,6 +422,9 @@ export default {
         // Save token first
         localStorage.setItem('devfriend_token', token);
 
+        const { authService } = await import('./services/authService');
+        authService.setAuthHeader(token);
+
         // Get user info using authService (same way as native login)
         try {
           const { authService } = await import('./services/authService');
