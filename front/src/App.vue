@@ -446,7 +446,8 @@ export default {
             };
 
             // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+            const cleanPath = (window.location.origin + window.location.pathname).replace(/([^:]\/)\/+/g, "$1");
+window.history.replaceState({}, document.title, cleanPath);
 
             this.$toast.success('Logged in with Google successfully!');
 
@@ -460,7 +461,8 @@ export default {
           console.error('Error getting user info:', error);
           this.$toast.error('Failed to get user information');
           // Clean URL even on error
-          window.history.replaceState({}, document.title, window.location.pathname);
+          const cleanPath = (window.location.origin + window.location.pathname).replace(/([^:]\/)\/+/g, "$1");
+window.history.replaceState({}, document.title, cleanPath);
         }
       }
 
@@ -512,14 +514,16 @@ export default {
         }
 
         // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const cleanPath = (window.location.origin + window.location.pathname).replace(/([^:]\/)\/+/g, "$1");
+window.history.replaceState({}, document.title, cleanPath);
       }
 
       // Handle OAuth error
       const oauthError = urlParams.get('oauth_error');
       if (oauthError) {
         this.$toast.error(`OAuth error: ${oauthError}`);
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const cleanPath = (window.location.origin + window.location.pathname).replace(/([^:]\/)\/+/g, "$1");
+window.history.replaceState({}, document.title, cleanPath);
       }
     },
   },
