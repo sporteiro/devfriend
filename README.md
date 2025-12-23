@@ -93,18 +93,43 @@ graph TD
 ```bash
 git clone <YOUR_REPO_URL>
 cd devFriend
-cd back && cp .env.example .env && cd ..
+
+# 1. Configure backend environment
+cd back && cp env.example .env && cd ..
+
+# 2. Configure frontend environment
+cd front && cp env.example .env && cd ..
+
+# 3. Launch all services
 docker compose up --build
 ```
 - Frontend: http://localhost:88
-- Backend: https://localhost:8888
-- API Docs (Swagger): https://localhost:8888/docs
+- Backend: http://localhost:8888
+- API Docs (Swagger): http://localhost:8888/docs
 
-**Local Development:**
-- Backend: `cd back && pip install -r requirements.txt && uvicorn src.main:app --reload --port 8888`
-- Frontend: `cd front && npm install && npm run serve -- --port 88`
-- Testing backend: `cd back && pytest`
-- Testing frontend: `cd playwright && yarn install && yarn test`
+> **Note:** By default, the backend runs with HTTPS using self-signed certificates. To run without HTTPS, edit `docker-compose.yml` and remove `--ssl-keyfile key.pem --ssl-certfile cert.pem` from the backend command. If using HTTPS, generate certificates first:
+> ```bash
+> cd back && openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+> ```
+
+**Local Development (without Docker):**
+```bash
+# Backend
+cd back
+cp env.example .env
+pip install -r requirements.txt
+uvicorn src.main:app --reload --port 8888
+
+# Frontend (in another terminal)
+cd front
+cp env.example .env
+npm install
+npm run serve -- --port 88
+```
+
+**Testing:**
+- Backend: `cd back && pytest`
+- Frontend E2E: `cd playwright && yarn install && yarn test`
 
 ## ⚠️ Database-dependent tests & CI
 Some backend tests require a running PostgreSQL instance and will attempt to connect at import time! To prevent CI and local runs without a DB from crashing, these test files include, at the top:
@@ -165,16 +190,18 @@ npx playwright test tests --headed --timeout=0
 
 ## 🌐 Deployment
 ### Docker Compose (Local/Dev, recommended):
-All stack runs with one command (`docker compose up --build`). Default environment is local/dev (`.env.example` is enough).
+All stack runs with one command (`docker compose up --build`). Default environment is local/dev (`env.example` is enough to start).
 
-**Environment Variables (Backend):**
+**Environment Variables (Backend - `back/.env`):**
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `DEVFRIEND_ENCRYPTION_KEY` (Fernet, required)
-- `FRONTEND_URL`
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
-- `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` (optional)
-- `JWT_SECRET_KEY` (optionally override default)
+- `DEVFRIEND_ENCRYPTION_KEY` (Fernet, required - generate with: `python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`)
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (for Gmail integration)
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (for GitHub integration)
+- `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` (optional, for Slack integration)
+- `JWT_SECRET_KEY` (recommended to change for production)
+
+**Environment Variables (Frontend - `front/.env`):**
+- `VUE_APP_API_URL` - Backend API URL (default: `http://localhost:8888`)
 
 **DB Schema:** Automatically set up by Docker, or init manually:
 ```bash
