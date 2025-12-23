@@ -53,14 +53,16 @@ DevFriend uses real Hexagonal Architecture (Ports & Adapters):
 ```mermaid
 graph TD
     Front[Vue.js SPA]
-    API[REST API (FastAPI)]
+    API[REST API - FastAPI]
     Services[Services Layer]
     Domain[Entities/Models]
-    Repo[Repository + PostgreSQL Adapter]
+    Repo[Repository Adapter]
     DB[(PostgreSQL)]
     Front -->|HTTP JWT| API
-    API --> Services --> Domain
-    Services --> Repo --> DB
+    API --> Services
+    Services --> Domain
+    Services --> Repo
+    Repo --> DB
 ```
 
 ---
