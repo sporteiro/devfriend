@@ -50,18 +50,9 @@ DevFriend uses real Hexagonal Architecture (Ports & Adapters):
 - Integrations are service-driven, supporting extension
 
 ### Architecture Overview
-```mermaid
-graph TD
-    Front[Vue.js SPA]
-    API[REST API (FastAPI)]
-    Services[Services Layer]
-    Domain[Entities/Models]
-    Repo[Repository + PostgreSQL Adapter]
-    DB[(PostgreSQL)]
-    Front -->|HTTP JWT| API
-    API --> Services --> Domain
-    Services --> Repo --> DB
-```
+![Architecture Diagram](diagrams_md_architecture.png)
+
+> **Tip:** For full architecture diagrams, see `diagrams.md`. This was originally a Mermaid diagram, which GitHub sometimes cannot render correctly. You can export or view the diagram locally or in a [Mermaid Live Editor](https://mermaid.live/edit).
 
 ---
 
